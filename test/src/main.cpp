@@ -71,5 +71,9 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    if(tester::instance().error())
+    {
+        return 1;
+    }
     return 0;
 }

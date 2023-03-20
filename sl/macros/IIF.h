@@ -1,6 +1,6 @@
 #pragma once
-#include <macros/CAT.h>
-#include <macros/BOOL.h>
+#include <sl/macros/CAT.h>
+#include <sl/macros/BOOL.h>
 
 
 #define SL_IF(cond) SL_IIF(BOOL(cond))

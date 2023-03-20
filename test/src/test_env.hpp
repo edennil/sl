@@ -50,6 +50,7 @@ namespace sl
                 void print_last()
                 {
                     auto to_print = build_message();
+                    error_ = true;
                     clean();
                     if (!std::get<0>(to_print).empty())
                     {
@@ -107,8 +108,13 @@ namespace sl
                     }
                 }
 
+                bool error() const
+                {
+                    return error_;
+                }
+
             protected:
-            
+
                 void clean()
                 {
                     file_.clear();
@@ -140,6 +146,7 @@ namespace sl
                 int line_;
                 std::string operation_;
                 std::string message_;
+                bool error_ = false;
             };
         }
 
@@ -159,13 +166,13 @@ namespace sl
                     group_ = tmpname.substr(0, i);
                     name_ = tmpname.substr(i + 2, tmpname.size());
                 }
-                auto iter = m_functors.find(group_);
-                auto end = m_functors.end();
+                auto iter = functors_.find(group_);
+                auto end = functors_.end();
                 if (iter == end)
                 {
                     functors tmp;
                     tmp.emplace(std::make_pair(std::move(name_), func));
-                    m_functors.emplace(std::make_pair(std::move(group_), std::move(tmp)));
+                    functors_.emplace(std::make_pair(std::move(group_), std::move(tmp)));
                 }
                 else
                 {
@@ -181,13 +188,13 @@ namespace sl
             void insert(const char *name, const char *group, const functor &func)
             {
                 std::string name_(name), group_(group);
-                auto iter = m_functors.find(group_);
-                auto end = m_functors.end();
+                auto iter = functors_.find(group_);
+                auto end = functors_.end();
                 if (iter == end)
                 {
                     functors tmp;
                     tmp.emplace(std::move(name_), func);
-                    m_functors.emplace(std::move(group_), std::move(tmp));
+                    functors_.emplace(std::move(group_), std::move(tmp));
                 }
                 else
                 {
@@ -202,39 +209,38 @@ namespace sl
             }
             void run(void) const
             {
-                for (const auto &n : m_functors)
+                for (const auto &n : functors_)
                 {
-                    std::cout << "Group Test " << n.first << " begin...." << std::endl;
                     for (const auto &m : n.second)
                     {
+                        message_error::instance().add_current_test(n.first, m.first);
+                        std::cout << "Running " << m.first << std::endl;
                         m.second();
-                        std::cout << "Test " << m.first << " : OK" << std::endl;
+                        message_error::instance().print_report();
+                        message_error::instance().clean_report();
                     }
-                    std::cout << "Group Test " << n.first << " end\n\n\n"
-                              << std::endl;
                 }
             }
             void run(const char *group) const
             {
-                auto iter = m_functors.find(group);
-                auto end = m_functors.end();
+                auto iter = functors_.find(group);
+                auto end = functors_.end();
                 if (iter != end)
                 {
-                    std::cout << "Group Test " << iter->first << " begin....\n\n"
-                              << std::endl;
                     for (const auto &m : iter->second)
                     {
+                        message_error::instance().add_current_test(group, m.first);
+                        std::cout << "Running " << m.first << std::endl;
                         m.second();
-                        std::cout << "Test " << m.first << " : OK\n" << std::endl;
+                        message_error::instance().print_report();
+                        message_error::instance().clean_report();
                     }
-                    std::cout << "\nGroup Test " << iter->first << " end\n\n"
-                              << std::endl;
                 }
             }
             void run(const char *group, const char *name) const
             {
-                auto iter = m_functors.find(group);
-                auto end = m_functors.end();
+                auto iter = functors_.find(group);
+                auto end = functors_.end();
                 if (iter != end)
                 {
                     auto iter_ = iter->second.find(name);
@@ -254,11 +260,18 @@ namespace sl
                 }
             }
 
+            bool error()
+            {
+                return message_error::instance().error();
+            }
+
         protected:
+
             using functors = std::map<std::string, functor>;
             using container = std::map<std::string, functors>;
 
-            container m_functors;
+            container functors_;
+
         };
 
     }

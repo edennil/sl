@@ -1,5 +1,5 @@
 #pragma once
-#include <macros/CAT.h>
+#include <sl/macros/CAT.h>
 
 #define GT_INC(a) GT_PRIMITIVE_CAT(GT_INC_, b)
 #define GT_INC_0 1

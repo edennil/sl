@@ -18,6 +18,4 @@ set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
 
-add_test(NAME sl_test
-         COMMAND sl_test --run=environment_test/function
-         )
+add_test(NAME environment_test COMMAND sl_test --run=environment_test)

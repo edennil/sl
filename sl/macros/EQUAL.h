@@ -1,9 +1,9 @@
 #pragma once
-#include <macros/COMPL.h>
-#include <macros/CAT.h>
-#include <macros/IS_PAREN.h>
-#include <macros/EAT.h>
-#include <macros/BITAND.h>
+#include <sl/macros/COMPL.h>
+#include <sl/macros/CAT.h>
+#include <sl/macros/IS_PAREN.h>
+#include <sl/macros/EAT.h>
+#include <sl/macros/BITAND.h>
 
 // Problem with SL_IS_COMPARABLE
 

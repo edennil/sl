@@ -1,5 +1,5 @@
 #pragma once
-#include <macros/CAT.h>
+#include <sl/macros/CAT.h>
 
 #define SL_DEC(a) SL_PRIMITIVE_CAT(SL_DEC_, b)
 #define SL_DEC_0 0

@@ -1,11 +1,12 @@
 #pragma once
 
+#include <cmath>
 #include <sl/macros/IIF.h>
 #include <sl/macros/NARG.h>
 #include <sl/macros/EQUAL.h>
 #include <type_traits>
 
-namespace SL
+namespace sl
 {
     namespace test
     {
@@ -34,14 +35,14 @@ namespace SL
 
         enum operation
         {
-            equal
+            equal, neq
         };
 
         template<typename Left, typename Right, operation op, typename _ = void>
         struct operations;
 
         template<typename Left, typename Right>
-        struct operations<Left, Right, equal, std::enable_if_t<std::is_arithmetic_v<Left>&& std::is_arithmetic_v<Right>>>
+        struct operations<Left, Right, equal, std::enable_if_t<std::is_arithmetic_v<Left> && std::is_arithmetic_v<Right>>>
         {
 
             static std::tuple<bool, std::string> apply(const Left& left, const Right& right)
@@ -65,8 +66,6 @@ namespace SL
             }
         };
 
-
-
         template<typename Left, typename Right>
         struct operations<Left, Right, equal, std::enable_if_t<!std::is_arithmetic_v<Left> || !std::is_arithmetic_v<Right>>>
         {
@@ -88,6 +87,52 @@ namespace SL
             }
         };
 
+        template<typename Left, typename Right>
+        struct operations<Left, Right, neq, std::enable_if_t<std::is_arithmetic_v<Left> && std::is_arithmetic_v<Right>>>
+        {
+
+            static std::tuple<bool, std::string> apply(const Left& left, const Right& right)
+            {
+                if (tolerance() == 0.)
+                {
+                    return std::make_tuple(left != right, std::string());
+                }
+                return compare_with_tolerance(left, right);
+            }
+
+            static std::string report(const Left& left, const Right& right)
+            {
+                std::string res;
+                res += '[';
+                res += std::to_string(left);
+                res += std::string(" == ");
+                res += std::to_string(right);
+                res += ']';
+                return res;
+            }
+        };
+
+        template<typename Left, typename Right>
+        struct operations<Left, Right, neq, std::enable_if_t<!std::is_arithmetic_v<Left> || !std::is_arithmetic_v<Right>>>
+        {
+
+            static std::tuple<bool, std::string> apply(const Left& left, const Right& right)
+            {
+                return std::make_tuple(left != right, std::string());
+            }
+
+            static std::string report(const Left& left, const Right& right)
+            {
+                std::string res;
+                res += '[';
+                res += left;
+                res += std::string(" == ");
+                res += right;
+                res += ']';
+                return res;
+            }
+        };
+
 
         template<typename T>
         struct variable;
@@ -98,9 +143,9 @@ namespace SL
             builder() = default;
 
             template<typename T>
-            variable<T> operator->*(T&& t)
+            variable<std::decay_t<T>> operator->*(T&& t)
             {
-                return variable<T>(std::forward<T>(t));
+                return variable<std::decay_t<T>>(std::forward<T>(t));
             }
 
         };
@@ -158,20 +203,56 @@ namespace SL
         {
             return expr<variable<Left>, Right, operation::equal>(l, std::forward<Right>(r));
         }
-    }
-}
 
-#define SL_TEST_BUILD_EXPR(P) (SL::test::builder()->*P)
+        template<typename Left, typename Right>
+        expr<variable<Left>, Right, operation::neq> operator!=(const variable<Left>& l, Right&& r)
+        {
+            return expr<variable<Left>, Right, operation::neq>(l, std::forward<Right>(r));
+        }
+
+        template<typename Left, typename Right>
+        auto operator+(const variable<Left>& l, Right&& r)
+        {
+            auto tmp = l.value_ + r;
+            return variable<decltype(tmp)>(tmp);
+        }
+
+        template<typename Left, typename Right>
+        auto operator-(const variable<Left>& l, Right&& r)
+        {
+            auto tmp = l.value_ - r;
+            return variable<decltype(tmp)>(tmp);
+        }
+
+        template<typename Left, typename Right>
+        auto operator*(const variable<Left>& l, Right&& r)
+        {
+            auto tmp = l.value_ * r;
+            return variable<decltype(tmp)>(tmp);
+        }
+
+        template<typename Left, typename Right>
+        auto operator/(const variable<Left>& l, Right&& r)
+        {
+            auto tmp = l.value_ / r;
+            return variable<decltype(tmp)>(tmp);
+        }
+
+    } // namespace test
+
+} // namespace sl
+
+#define SL_TEST_BUILD_EXPR(P) (sl::test::builder()->*P)
 
 #define SL_TEST_WITHOUT_PRECISSION(x) {auto t = SL_TEST_BUILD_EXPR(x); auto res = t.validate(); if(!std::get<0>(res)){\
-                                                message_error::Instance().add_file(__FILE__); message_error::Instance().add_line(__LINE__); message_error::Instance().add_operation(#x);\
+                                                message_error::instance().add_file(__FILE__); message_error::instance().add_line(__LINE__); message_error::instance().add_operation(#x);\
                                                 std::string repport = t.report(); const auto& res_message = std::get<1>(res); \
-                                                if (res_message.empty()){message_error::Instance().add_message(std::move(repport));}else{message_error::Instance().add_message(repport + ": " + std::get<1>(res));} message_error::Instance().print_last();}}
+                                                if (res_message.empty()){message_error::instance().add_message(std::move(repport));}else{message_error::instance().add_message(repport + ": " + std::get<1>(res));} message_error::instance().print_last();}}
 
-#define SL_TEST_WITH_PRECISSION(x, y) {auto old_precision = SL::test::tolerance(); SL::test::tolerance() = y; auto t = SL_TEST_BUILD_EXPR(x); auto res = t.validate(); if(!std::get<0>(res)){\
-                                                message_error::Instance().add_file(__FILE__); message_error::Instance().add_line(__LINE__); message_error::Instance().add_operation(#x);\
+#define SL_TEST_WITH_PRECISSION(x, y) {auto old_precision = sl::test::tolerance(); sl::test::tolerance() = y; auto t = SL_TEST_BUILD_EXPR(x); auto res = t.validate(); if(!std::get<0>(res)){\
+                                                message_error::instance().add_file(__FILE__); message_error::instance().add_line(__LINE__); message_error::instance().add_operation(#x);\
                                                 std::string repport = t.report(); const auto& res_message = std::get<1>(res); \
-                                                if (res_message.empty()){message_error::Instance().add_message(std::move(repport));}else{message_error::Instance().add_message(repport + ": " + std::get<1>(res));} message_error::Instance().print_last();}SL::test::tolerance() = old_precision; }
+                                                if (res_message.empty()){message_error::instance().add_message(std::move(repport));}else{message_error::instance().add_message(repport + ": " + std::get<1>(res));} message_error::instance().print_last();}sl::test::tolerance() = old_precision; }
 
 #define SL_INVOKE_BY_NUMBER_ARGS(N, F1, F2, ...) SL_IIF(SL_EQUAL(SL_NARG(__VA_ARGS__), N))(F1, F2)(__VA_ARGS__)
 

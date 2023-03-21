@@ -1,10 +1,12 @@
 #pragma once
 
 #include <iostream>
-#include <sl/patterns/singleton.hpp>
+#include <functional>
 #include <map>
 #include <vector>
 #include <string>
+
+#include <sl/patterns/singleton.hpp>
 
 namespace sl
 {

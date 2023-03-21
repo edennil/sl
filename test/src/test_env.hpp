@@ -282,8 +282,8 @@ namespace sl
 
 using tester = sl::patterns::singleton<sl::test::tester>;
 
-#define _SL_ADD_TEST_(A) tester::instance().insert(#A, A)
-#define _SL_RUN_TEST_(A)                                       \
+#define SL_ADD_TEST(A) tester::instance().insert(#A, A)
+#define SL_RUN_TEST(A)                                         \
     {                                                          \
         std::string tmpname(#A);                               \
         std::string::size_type i = tmpname.find("::");         \
@@ -295,9 +295,9 @@ using tester = sl::patterns::singleton<sl::test::tester>;
         }                                                      \
         tester::instance().run(group_.c_str(), name_.c_str()); \
     }
-#define _SL_RUN_GROUP_(A) tester::instance().run(#A)
+#define SL_RUN_GROUP(A) tester::instance().run(#A)
 
-#define _SL_ADD_TEST_CASE_(A)                                         \
+#define SL_ADD_TEST_CASE(A)                                           \
     void A(void);                                                     \
     namespace                                                         \
     {                                                                 \
@@ -312,9 +312,9 @@ using tester = sl::patterns::singleton<sl::test::tester>;
     }                                                                 \
     void A(void)
 
-#define _SL_TEST_GROUP_(A) \
+#define SL_TEST_GROUP(A)   \
     namespace A            \
     {                      \
         std::string group_name(#A);
 
-#define _SL_END_TEST_GROUP_ }
+#define SL_END_TEST_GROUP }

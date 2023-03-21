@@ -6,6 +6,17 @@
 #include <sl/macros/EQUAL.h>
 #include <type_traits>
 
+#define _OPERATORS_(OP)  template<typename Left, typename Right> auto operator OP(const variable<Left>& l, Right&& r){auto tmp = l.value_ OP r; return variable<decltype(tmp)>(tmp);}
+#define _OPERATORS_EXPR_(OP, type) template<typename Left, typename Right> expr<variable<Left>, Right, type> operator OP(const variable<Left>& l, Right&& r) { return expr<variable<Left>, Right, type>(l, std::forward<Right>(r));}
+#define _OPERATIONS_(type, OP, inv_OP)   template<typename Left, typename Right> struct operations<Left, Right, type, std::enable_if_t<std::is_arithmetic_v<Left>&& std::is_arithmetic_v<Right>>>{\
+                                static std::tuple<bool, std::string> apply(const Left& left, const Right& right){\
+                                    if (tolerance() == 0.) { return std::make_tuple(left OP right, std::string());}\
+                                    return compare_with_tolerance(left, right);}\
+                                static std::string report(const Left& left, const Right& right){std::string res;res += '[';res += std::to_string(left);res += ' ' + #inv_OP + ' ';res += std::to_string(right);res += ']';return res;}};\
+                             template<typename Left, typename Right> struct operations<Left, Right, type, std::enable_if_t<!std::is_arithmetic_v<Left> || !std::is_arithmetic_v<Right>>>{\
+                                static std::tuple<bool, std::string> apply(const Left& left, const Right& right) { return std::make_tuple(left OP right, std::string());}\
+                                static std::string report(const Left& left, const Right& right) {std::string res;res += '[';res += left;res += ' ' + #inv_OP + ' ';res += right;res += ']';return res;}}
+
 namespace sl
 {
     namespace test
@@ -35,104 +46,18 @@ namespace sl
 
         enum operation
         {
-            equal, neq
+            eq, neq, gt, lt, ge, le
         };
 
         template<typename Left, typename Right, operation op, typename _ = void>
         struct operations;
 
-        template<typename Left, typename Right>
-        struct operations<Left, Right, equal, std::enable_if_t<std::is_arithmetic_v<Left> && std::is_arithmetic_v<Right>>>
-        {
-
-            static std::tuple<bool, std::string> apply(const Left& left, const Right& right)
-            {
-                if (tolerance() == 0.)
-                {
-                    return std::make_tuple(left == right, std::string());
-                }
-                return compare_with_tolerance(left, right);
-            }
-
-            static std::string report(const Left& left, const Right& right)
-            {
-                std::string res;
-                res += '[';
-                res += std::to_string(left);
-                res += std::string(" != ");
-                res += std::to_string(right);
-                res += ']';
-                return res;
-            }
-        };
-
-        template<typename Left, typename Right>
-        struct operations<Left, Right, equal, std::enable_if_t<!std::is_arithmetic_v<Left> || !std::is_arithmetic_v<Right>>>
-        {
-
-            static std::tuple<bool, std::string> apply(const Left& left, const Right& right)
-            {
-                return std::make_tuple(left == right, std::string());
-            }
-
-            static std::string report(const Left& left, const Right& right)
-            {
-                std::string res;
-                res += '[';
-                res += left;
-                res += std::string(" != ");
-                res += right;
-                res += ']';
-                return res;
-            }
-        };
-
-        template<typename Left, typename Right>
-        struct operations<Left, Right, neq, std::enable_if_t<std::is_arithmetic_v<Left> && std::is_arithmetic_v<Right>>>
-        {
-
-            static std::tuple<bool, std::string> apply(const Left& left, const Right& right)
-            {
-                if (tolerance() == 0.)
-                {
-                    return std::make_tuple(left != right, std::string());
-                }
-                return compare_with_tolerance(left, right);
-            }
-
-            static std::string report(const Left& left, const Right& right)
-            {
-                std::string res;
-                res += '[';
-                res += std::to_string(left);
-                res += std::string(" == ");
-                res += std::to_string(right);
-                res += ']';
-                return res;
-            }
-        };
-
-        template<typename Left, typename Right>
-        struct operations<Left, Right, neq, std::enable_if_t<!std::is_arithmetic_v<Left> || !std::is_arithmetic_v<Right>>>
-        {
-
-            static std::tuple<bool, std::string> apply(const Left& left, const Right& right)
-            {
-                return std::make_tuple(left != right, std::string());
-            }
-
-            static std::string report(const Left& left, const Right& right)
-            {
-                std::string res;
-                res += '[';
-                res += left;
-                res += std::string(" == ");
-                res += right;
-                res += ']';
-                return res;
-            }
-        };
-
+        _OPERATIONS_(eq, ==, !=);
+        _OPERATIONS_(neq, !=, ==);
+        _OPERATIONS_(gt, > , <= );
+        _OPERATIONS_(lt, < , >= );
+        _OPERATIONS_(ge, >= , < );
+        _OPERATIONS_(le, <= , > );
 
         template<typename T>
         struct variable;
@@ -198,49 +123,25 @@ namespace sl
             Right right_;
         };
 
-        template<typename Left, typename Right>
-        expr<variable<Left>, Right, operation::equal> operator==(const variable<Left>& l, Right&& r)
-        {
-            return expr<variable<Left>, Right, operation::equal>(l, std::forward<Right>(r));
-        }
+        _OPERATORS_EXPR_(==, operation::eq)
+        _OPERATORS_EXPR_(!=, operation::neq)
+        _OPERATORS_EXPR_(>, operation::gt)
+        _OPERATORS_EXPR_(< , operation::lt)
+        _OPERATORS_EXPR_(>= , operation::ge)
+        _OPERATORS_EXPR_(<= , operation::le)
 
-        template<typename Left, typename Right>
-        expr<variable<Left>, Right, operation::neq> operator!=(const variable<Left>& l, Right&& r)
-        {
-            return expr<variable<Left>, Right, operation::neq>(l, std::forward<Right>(r));
-        }
-
-        template<typename Left, typename Right>
-        auto operator+(const variable<Left>& l, Right&& r)
-        {
-            auto tmp = l.value_ + r;
-            return variable<decltype(tmp)>(tmp);
-        }
-
-        template<typename Left, typename Right>
-        auto operator-(const variable<Left>& l, Right&& r)
-        {
-            auto tmp = l.value_ - r;
-            return variable<decltype(tmp)>(tmp);
-        }
-
-        template<typename Left, typename Right>
-        auto operator*(const variable<Left>& l, Right&& r)
-        {
-            auto tmp = l.value_ * r;
-            return variable<decltype(tmp)>(tmp);
-        }
-
-        template<typename Left, typename Right>
-        auto operator/(const variable<Left>& l, Right&& r)
-        {
-            auto tmp = l.value_ / r;
-            return variable<decltype(tmp)>(tmp);
-        }
+        _OPERATORS_(+)
+        _OPERATORS_(-)
+        _OPERATORS_(*)
+        _OPERATORS_(/)
 
     } // namespace test
 
 } // namespace sl
+
+#undef _OPERATORS_
+#undef _OPERATORS_EXPR_
+#undef _OPERATIONS_
 
 #define SL_TEST_BUILD_EXPR(P) (sl::test::builder()->*P)
 
@@ -257,4 +158,3 @@ namespace sl
 #define SL_INVOKE_BY_NUMBER_ARGS(N, F1, F2, ...) SL_IIF(SL_EQUAL(SL_NARG(__VA_ARGS__), N))(F1, F2)(__VA_ARGS__)
 
 #define SL_TEST(...) SL_INVOKE_BY_NUMBER_ARGS(2, SL_TEST_WITH_PRECISSION, SL_TEST_WITHOUT_PRECISSION, __VA_ARGS__)
-

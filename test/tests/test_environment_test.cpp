@@ -1,9 +1,9 @@
 #include "test_env.hpp"
 #include "framework/helper.hpp"
 
-_SL_TEST_GROUP_(environment_test)
+SL_TEST_GROUP(environment_test)
 
-_SL_ADD_TEST_CASE_(operations)
+SL_ADD_TEST_CASE(operations)
 {
     double a = 2.;
     double b = 2.;
@@ -14,10 +14,11 @@ _SL_ADD_TEST_CASE_(operations)
     SL_TEST(a / b == 1);
 
     SL_TEST(a + b != 3);
-    SL_TEST(a - b != 1);
-    SL_TEST(a * b != 3);
-    SL_TEST(a / b != 0);    
+    SL_TEST(a + b > 3);
+    SL_TEST(a + b >= 4);
+    SL_TEST(a + b < 5);
+    SL_TEST(a + b <= 5);
 }
 
 
-_SL_END_TEST_GROUP_
+SL_END_TEST_GROUP

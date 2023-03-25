@@ -174,13 +174,13 @@ namespace sl
 		template<typename IN, typename OUT, typename T, typename U>
 		void link_derived(const T *t = nullptr, const U *u = nullptr)
 		{
-			gtl::singleton<detail::builder_derivated<IN, OUT, T, U>>::Instance().add(u);
+			sl::singleton<detail::builder_derivated<IN, OUT, T, U>>::instance().add(u);
 		}
 
 		template<typename IN, typename OUT, typename T, typename std::enable_if_t<!std::is_abstract<T>::value, int> = 0>
 		void link_derived(const T *t = nullptr)
 		{
-			gtl::singleton<detail::builder_derivated<IN, OUT, T, T>>::Instance().add(t);
+			sl::singleton<detail::builder_derivated<IN, OUT, T, T>>::instance().add(t);
 		}
 
 		template<typename IN, typename OUT, typename T, typename std::enable_if_t<std::is_abstract<T>::value, int> = 0>

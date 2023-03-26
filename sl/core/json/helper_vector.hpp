@@ -1,6 +1,6 @@
 #pragma once
 
-#include "helper_fundamental.h"
+#include "helper_fundamental.hpp"
 
 namespace sl
 {
@@ -31,10 +31,10 @@ namespace sl
                         {
                             for (std::size_t i = 0; i < obj.size() - 1; i++)
                             {
-                                gt::serialization::detail::json::fundamenta_tools::helper<value_type>::serialize(out, obj[i]);
+                                sl::detail::json::fundamenta_tools::helper<value_type>::serialize(out, obj[i]);
                                 out.get() << ',';
                             }
-                            gt::serialization::detail::json::fundamenta_tools::helper<value_type>::serialize(out, obj[obj.size() - 1]);
+                            sl::detail::json::fundamenta_tools::helper<value_type>::serialize(out, obj[obj.size() - 1]);
                         }
                         out.get() << ']';
                     }
@@ -53,7 +53,7 @@ namespace sl
                         while (true)
                         {
                             value_type value;
-                            gt::serialization::detail::json::fundamenta_tools::helper_in_vector<value_type>::deserialize(in, value);
+                            sl::detail::json::fundamenta_tools::helper_in_vector<value_type>::deserialize(in, value);
                             obj.push_back(std::move(value));
                             if (in.compare(']'))
                             {
@@ -79,10 +79,10 @@ namespace sl
                         {
                             for (std::size_t i = 0; i < obj.size() - 1; i++)
                             {
-                                gt::serialization::detail::helper<value_type>::serialize(out, obj[i]);
+                                sl::detail::helper<value_type>::serialize(out, obj[i]);
                                 out.get() << ',';
                             }
-                            gt::serialization::detail::helper<value_type>::serialize(out, obj[obj.size() - 1]);
+                            sl::detail::helper<value_type>::serialize(out, obj[obj.size() - 1]);
                         }
                         out.get() << ']';
                     }
@@ -101,7 +101,7 @@ namespace sl
                         while (true)
                         {
                             value_type value;
-                            gt::serialization::detail::helper<value_type>::deserialize(in, value);
+                            sl::detail::helper<value_type>::deserialize(in, value);
                             obj.push_back(std::move(value));
                             if (in.compare(']'))
                             {

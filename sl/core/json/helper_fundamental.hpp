@@ -30,7 +30,7 @@ namespace sl
                         auto q = in.find_first_of(']');
                         p = p < q ? p : q;
                         auto size = p - in.position();
-                        obj = gt::serialization::detail::to_value<std::decay_t<T>>(in.substr(size).c_str());
+                        obj = sl::detail::to_value<std::decay_t<T>>(in.substr(size).c_str());
                         in += size;
                     }
                 };

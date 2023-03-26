@@ -1,6 +1,6 @@
 #pragma once
 
-#include <sl/patterns/singleton.h>
+#include <sl/patterns/singleton.hpp>
 
 namespace sl
 {
@@ -47,34 +47,33 @@ namespace sl
 			virtual size_t getVersion() const = 0;
 		};
 
-		template<typename IN, typename OUT, typename A, typename B>
+		template<typename IN, typename OUT, typename A>
 		struct builder_derivated : builder_base<IN, OUT, A>
 		{
 			using base = std::decay_t<A>;
-			using derived = std::decay_t<B>;
 
 			virtual ~builder_derivated() = default;
 			builder_derivated() = default;
 
-			template<typename B>
-			size_t get_type(const std::shared_ptr<B> &b)
+			template<typename C>
+			size_t get_type(const std::shared_ptr<C> &c)
 			{
-				return get_type(b.get());
+				return get_type(c.get());
 			}
 
-			template<typename B>
-			size_t get_type(const std::unique_ptr<B> &b)
+			template<typename C>
+			size_t get_type(const std::unique_ptr<C> &c)
 			{
-				return get_type(b.get());
+				return get_type(c.get());
 			}
 
-			template<typename B>
-			size_t get_type(B *b)
+			template<typename C>
+			size_t get_type(C *c)
 			{
 				size_t i = 0;
 				for(const auto &v : builders_)
 				{
-					if(v->test(b))
+					if(v->test(c))
 					{
 						return i;
 					}
@@ -84,13 +83,13 @@ namespace sl
 				throw std::bad_cast();
 			}
 
-			template<typename B>
-			void add(B *b)
+			template<typename C>
+			void add(C *c)
 			{
 				bool is_found = false;
 				for(const auto &v : builders_)
 				{
-					if(v->test(b))
+					if(v->test(c))
 					{
 						is_found = true;
 						break;
@@ -98,7 +97,7 @@ namespace sl
 				}
 				if(!is_found)
 				{
-					builders_.emplace_back(new builder_derivated<IN, OUT, A, B>());
+					//builders_.emplace_back(new builder_derivated<IN, OUT, A, C>());
 				}
 			}
 
@@ -174,13 +173,13 @@ namespace sl
 		template<typename IN, typename OUT, typename T, typename U>
 		void link_derived(const T *t = nullptr, const U *u = nullptr)
 		{
-			sl::singleton<detail::builder_derivated<IN, OUT, T, U>>::instance().add(u);
+			//sl::patterns::singleton<detail::builder_derivated<IN, OUT, T>::instance().add(u);
 		}
 
 		template<typename IN, typename OUT, typename T, typename std::enable_if_t<!std::is_abstract<T>::value, int> = 0>
 		void link_derived(const T *t = nullptr)
 		{
-			sl::singleton<detail::builder_derivated<IN, OUT, T, T>>::instance().add(t);
+			//sl::patterns::singleton<detail::builder_derivated<IN, OUT, T>>::instance().add(t);
 		}
 
 		template<typename IN, typename OUT, typename T, typename std::enable_if_t<std::is_abstract<T>::value, int> = 0>
@@ -324,12 +323,6 @@ namespace sl
 	constexpr auto optional_basic_property(T C::*member, const char *name)
 	{
 		return detail::basic_property<C, T, true>(member, name);
-	}
-
-	template<typename T, typename U>
-	constexpr auto ptr_array(T &&t, U &&u)
-	{
-		return detail::ptr_array<T, U>(std::forward<T>(t), std::forward<U>(u));
 	}
 
 	template<typename C, typename T, typename U>

@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <memory>
+#include <exception>
 
 namespace sl
 {
@@ -177,7 +178,7 @@ namespace sl
                     pointers_.emplace(memory, position);
                     return -1;
                 }
-                return std::exception();
+                throw std::exception();
             }
 
             template<typename T>
@@ -195,7 +196,7 @@ namespace sl
                     pointers_.emplace(memory, position);
                     return -1;
                 }
-                return std::exception();
+                throw std::exception();
             }
 
             template<typename T>
@@ -214,7 +215,7 @@ namespace sl
                     pointers_.emplace(memory, position);
                     return -1;
                 }
-                return std::exception();
+                throw std::exception();
             }
 
             template<typename T>
@@ -240,7 +241,7 @@ namespace sl
                         auto it = unique_ptr_.find(i);
                         if(it != unique_ptr_.end())
                         {
-                            throw std::exception("This pointer is used as a unique_ptr");
+                            throw std::runtime_error("This pointer is used as a unique_ptr");
                         }
                         auto tmp = std::shared_ptr<T>(static_cast<T *>(positions_[i].first));
                         positions_[i].second = std::static_pointer_cast<void>(tmp);
@@ -263,14 +264,14 @@ namespace sl
                     {
                         if(positions_[i].second)
                         {
-                            throw std::exception("We can't create a unique_ptr using a shared_ptr");
+                            throw std::runtime_error("We can't create a unique_ptr using a shared_ptr");
                         }
                         obj = std::make_unique<T>(static_cast<T *>(positions_[i].first));
                         unique_ptr_.emplace(i);
                     }
                     else
                     {
-                        throw std::exception("Only one unique_ptr");
+                        throw std::runtime_error("only one unique_ptr");
                     }
                 }
             }

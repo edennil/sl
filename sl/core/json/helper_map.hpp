@@ -1,6 +1,6 @@
 #pragma once
 
-#include "helper_fundamental.h"
+#include "helper_fundamental.hpp"
 
 namespace sl
 {
@@ -35,9 +35,9 @@ namespace sl
                             size_t j = 0;
                             for (const auto &m : obj)
                             {
-                                gt::serialization::detail::json::fundamenta_tools::helper<key_type>::serialize(out, m.first);
+                                sl::detail::json::fundamenta_tools::helper<key_type>::serialize(out, m.first);
                                 out.get() << ':';
-                                gt::serialization::detail::json::fundamenta_tools::helper<mapped_type>::serialize(out, m.second);
+                                sl::detail::json::fundamenta_tools::helper<mapped_type>::serialize(out, m.second);
                                 j++;
                                 if (j < size)
                                 {
@@ -59,9 +59,9 @@ namespace sl
                         {
                             key_type key;
                             mapped_type value;
-                            gt::serialization::detail::json::fundamenta_tools::helper<key_type>::deserialize(in, key);
+                            sl::detail::json::fundamenta_tools::helper<key_type>::deserialize(in, key);
                             in++;
-                            gt::serialization::detail::json::fundamenta_tools::helper<mapped_type>::deserialize(in, value);
+                            sl::detail::json::fundamenta_tools::helper<mapped_type>::deserialize(in, value);
                             obj.emplace(std::move(key), std::move(value));
                             if (in.compare('}'))
                             {
@@ -92,9 +92,9 @@ namespace sl
                             size_t j = 0;
                             for (const auto& m : obj)
                             {
-                                gt::serialization::detail::json::fundamenta_tools::helper<key_type>::serialize(out, m.first);
+                                sl::detail::json::fundamenta_tools::helper<key_type>::serialize(out, m.first);
                                 out.get() << ':';
-                                gt::serialization::detail::helper<mapped_type>::serialize(out, m.second);
+                                sl::detail::helper<mapped_type>::serialize(out, m.second);
                                 j++;
                                 if (j < size)
                                 {
@@ -116,9 +116,9 @@ namespace sl
                         {
                             key_type key;
                             mapped_type value;
-                            gt::serialization::detail::json::fundamenta_tools::helper<key_type>::deserialize(in, key);
+                            sl::detail::json::fundamenta_tools::helper<key_type>::deserialize(in, key);
                             in++;
-                            gt::serialization::detail::helper<mapped_type>::deserialize(in, value);
+                            sl::detail::helper<mapped_type>::deserialize(in, value);
                             obj.emplace(std::move(key), std::move(value));
                             if (in.compare('}'))
                             {

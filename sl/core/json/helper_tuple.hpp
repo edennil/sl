@@ -1,6 +1,6 @@
 #pragma once
 
-#include "helper_fundamental.h"
+#include "helper_fundamental.hpp"
 
 namespace sl
 {
@@ -30,11 +30,11 @@ namespace sl
                             static constexpr bool is_simple = std::is_fundamental_v<value_type> || std::is_same_v<value_type, std::string>;
                             if constexpr (is_simple)
                             {
-                                gt::serialization::detail::json::fundamenta_tools::helper<value_type>::serialize(out, value);
+                                sl::detail::json::fundamenta_tools::helper<value_type>::serialize(out, value);
                             }
                             else
                             {
-                                gt::serialization::detail::helper<value_type>::serialize(out, value);
+                                sl::detail::helper<value_type>::serialize(out, value);
                             }
                             out.get() << ',';
                         });
@@ -44,11 +44,11 @@ namespace sl
                         static constexpr bool is_simple = std::is_fundamental_v<value_type> || std::is_same_v<value_type, std::string>;
                         if constexpr (is_simple)
                         {
-                            gt::serialization::detail::json::fundamenta_tools::helper<value_type>::serialize(out, value);
+                            sl::detail::json::fundamenta_tools::helper<value_type>::serialize(out, value);
                         }
                         else
                         {
-                            gt::serialization::detail::helper<value_type>::serialize(out, value);
+                            sl::detail::helper<value_type>::serialize(out, value);
                         }
                         out.get() << ']';
                     }
@@ -66,11 +66,11 @@ namespace sl
                             static constexpr bool is_simple = std::is_fundamental_v<value_type> || std::is_same_v<value_type, std::string>;
                             if constexpr (is_simple)
                             {
-                                gt::serialization::detail::json::fundamenta_tools::helper<value_type>::deserialize(in, value);
+                                sl::detail::json::fundamenta_tools::helper<value_type>::deserialize(in, value);
                             }
                             else
                             {
-                                gt::serialization::detail::helper<value_type>::deserialize(in, value);
+                                sl::detail::helper<value_type>::deserialize(in, value);
                             }
                             in++;
                             });
@@ -80,11 +80,11 @@ namespace sl
                         static constexpr bool is_simple = std::is_fundamental_v<value_type> || std::is_same_v<value_type, std::string>;
                         if constexpr (is_simple)
                         {
-                            gt::serialization::detail::json::fundamenta_tools::helper<value_type>::deserialize(in, value);
+                            sl::detail::json::fundamenta_tools::helper<value_type>::deserialize(in, value);
                         }
                         else
                         {
-                            gt::serialization::detail::helper<value_type>::deserialize(in, value);
+                            sl::detail::helper<value_type>::deserialize(in, value);
                         }
                         in++;
                     }

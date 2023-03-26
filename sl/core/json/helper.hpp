@@ -1,9 +1,9 @@
 #pragma once
 
 #include <iomanip>
-#include <sl/core/json/helper_vector.h>
-#include <sl/corejson/helper_map.h>
-#include <sl/core/json/helper_tuple.h>
+#include <sl/core/json/helper_vector.hpp>
+#include <sl/core/json/helper_map.hpp>
+#include <sl/core/json/helper_tuple.hpp>
 
 namespace sl
 {
@@ -36,15 +36,15 @@ namespace sl
                     static void serialize_poly(json_oarchive &out, const PTR &obj)
                     {
                         using type = std::decay_t<typename ptr_wrapper<PTR>::type>;
-                        using memory_ptr = gtl::singleton<gt::serialization::detail::builder_derivated<json_iarchive, json_oarchive, type>>;
+                        using memory_ptr = sl::patterns::singleton<sl::detail::builder_derivated<json_iarchive, json_oarchive, type>>;
 
                         auto id = out.id(obj);
                         if(id == -1)
                         {
                             id = out.add(obj);
-                            size_t index = memory_ptr::Instance().get_type(ptr_wrapper<PTR>::get(obj));
-                            const auto &child_name = memory_ptr::Instance().getClassName(index);
-                            auto version = memory_ptr::Instance().getVersion(index);
+                            size_t index = memory_ptr::instance().get_type(ptr_wrapper<PTR>::get(obj));
+                            const auto &child_name = memory_ptr::instance().getClassName(index);
+                            auto version = memory_ptr::instance().getVersion(index);
                             auto tmp = std::string("{\"object\":\"") + class_data<type>::name + "\",\"@ptr\":" + std::to_string(id);
                             out.get() << tmp;
                             if(version != 0)
@@ -54,7 +54,7 @@ namespace sl
                             }
                             tmp = ",\"" + std::string(child_name) + "\":{";
                             out.get() << tmp;
-                            memory_ptr::Instance().save(index, ptr_wrapper<PTR>::get(obj), out);
+                            memory_ptr::instance().save(index, ptr_wrapper<PTR>::get(obj), out);
                             out.get() << '}';
                             out.get() << '}';
                         }
@@ -90,7 +90,7 @@ namespace sl
                             in += static_cast<int>(size_child + 1);
                             in++;
                             in++;
-                            gtl::singleton<detail::builder_derivated<json_iarchive, json_oarchive, type>>::Instance().build(child_name, version, in, obj);
+                            sl::patterns::singleton<detail::builder_derivated<json_iarchive, json_oarchive, type>>::instance().build(child_name, version, in, obj);
                             in++;
                         };
 
@@ -270,7 +270,7 @@ namespace sl
             template<typename C, typename T, typename U, typename A>
             struct explicit_helper_property<array_property<C, T, U, A>>
             {
-                using P = typename array_property<C, T, U, A>;
+                using P = array_property<C, T, U, A>;
 
                 template<typename V>
                 static void serialize(json_oarchive &out, const P &p, const V &v)
@@ -338,6 +338,28 @@ namespace sl
                 in++;
             }
         };
+
+        struct explicit_without_name
+        {
+            template<typename T>
+            static void serialize(json_oarchive &out, const T &obj)
+            {
+                constexpr auto properties = access::template get_properties<T>();
+                const auto size = std::tuple_size_v<decltype(properties)>;
+                detail::for_each(std::make_index_sequence<size>{}, [&](auto i)
+                {
+                    auto property = std::get<i>(properties);
+                    auto tmp = '\"' + std::string(property.name_) + '\"';
+                    tmp += ':';
+                    out.get() << tmp;
+                    json::explicit_helper_property<decltype(property)>::serialize(out, property, obj);
+                    if(i != size - 1)
+                    {
+                        out.get() << ',';
+                    }
+                });
+            }
+        };
         
         template<int version>
         struct explicit_witout_serialize_with_version
@@ -368,28 +390,6 @@ namespace sl
                 explicit_without_name::serialize(out, obj);
                 out.get() << '}';
                 out.get() << '}';
-            }
-        };
-
-        struct explicit_without_name
-        {
-            template<typename T>
-            static void serialize(json_oarchive &out, const T &obj)
-            {
-                constexpr auto properties = access::template get_properties<T>();
-                const auto size = std::tuple_size_v<decltype(properties)>;
-                detail::for_each(std::make_index_sequence<size>{}, [&](auto i)
-                {
-                    auto property = std::get<i>(properties);
-                    auto tmp = '\"' + std::string(property.name_) + '\"';
-                    tmp += ':';
-                    out.get() << tmp;
-                    json::explicit_helper_property<decltype(property)>::serialize(out, property, obj);
-                    if(i != size - 1)
-                    {
-                        out.get() << ',';
-                    }
-                });
             }
         };
 
@@ -496,7 +496,7 @@ namespace sl
                 const auto &property = std::get<0>(all_obj);
                 const auto &obj = std::get<1>(all_obj);
                 const auto &is_end = std::get<2>(all_obj);
-                using property_t = typename gt::serialization::detail::basic_property<T, U, O>::type;
+                using property_t = typename sl::detail::basic_property<T, U, O>::type;
                 in++;
                 size_t label_size = strlen(property.name_);
                 if(!in.compare(property.name_, label_size))
@@ -669,7 +669,7 @@ namespace sl
             static void serialize(json_oarchive& out, const std::vector<A>& obj)
             {
                 constexpr static bool is_simple_value = std::is_fundamental_v<A> >> std::is_same_v<A, std::string>;
-                gt::serialization::detail::json::vector_tools::helper<is_simple_value>::serialize(out, obj);
+                sl::detail::json::vector_tools::helper<is_simple_value>::serialize(out, obj);
             }
         };
 
@@ -679,7 +679,7 @@ namespace sl
             static void serialize(json_iarchive &out, std::vector<A> &obj)
             {
                 constexpr static bool is_simple_value = std::is_fundamental_v<A> >> std::is_same_v<A, std::string>;
-                gt::serialization::detail::json::vector_tools::helper<is_simple_value>::deserialize(out, obj);
+                sl::detail::json::vector_tools::helper<is_simple_value>::deserialize(out, obj);
             }
         };
 
@@ -712,7 +712,7 @@ namespace sl
             {
                 constexpr static bool is_simple_key = std::is_fundamental_v<K> || std::is_same_v<K, std::string>;
                 constexpr static bool is_simple_value = std::is_fundamental_v<V> || std::is_same_v<V, std::string>;
-                gt::serialization::detail::json::map_tools::helper<is_simple_key, is_simple_value>::serialize(out, obj);
+                sl::detail::json::map_tools::helper<is_simple_key, is_simple_value>::serialize(out, obj);
             }
         };
 
@@ -723,7 +723,7 @@ namespace sl
             {
                 constexpr static bool is_simple_key = std::is_fundamental_v<K> || std::is_same_v<K, std::string>;
                 constexpr static bool is_simple_value = std::is_fundamental_v<V> || std::is_same_v<V, std::string>;
-                gt::serialization::detail::json::map_tools::helper<is_simple_key, is_simple_value>::deserialize(out, obj);
+                sl::detail::json::map_tools::helper<is_simple_key, is_simple_value>::deserialize(out, obj);
             }
         };
 
@@ -734,7 +734,7 @@ namespace sl
             {
                 constexpr static bool is_simple_key = std::is_fundamental_v<K> || std::is_same_v<K, std::string>;
                 constexpr static bool is_simple_value = std::is_fundamental_v<V> || std::is_same_v<V, std::string>; 
-                gt::serialization::detail::json::map_tools::helper<is_simple_key, is_simple_value>::serialize(out, obj);
+                sl::detail::json::map_tools::helper<is_simple_key, is_simple_value>::serialize(out, obj);
             }
         };
 
@@ -745,7 +745,7 @@ namespace sl
             {
                 constexpr static bool is_simple_key = std::is_fundamental_v<K> || std::is_same_v<K, std::string>;
                 constexpr static bool is_simple_value = std::is_fundamental_v<V> || std::is_same_v<V, std::string>; 
-                gt::serialization::detail::json::map_tools::helper<is_simple_key, is_simple_value>::deserialize(out, obj);
+                sl::detail::json::map_tools::helper<is_simple_key, is_simple_value>::deserialize(out, obj);
             }
         };
 
@@ -754,7 +754,7 @@ namespace sl
         {
             static void serialize(json_oarchive &out, const std::tuple<A...> &obj)
             {
-                gt::serialization::detail::json::tuple_tools::helper::serialize(out, obj);
+                sl::detail::json::tuple_tools::helper::serialize(out, obj);
             }
         };
 
@@ -763,7 +763,7 @@ namespace sl
         {
             static void deserialize(json_iarchive &in, std::tuple<A...> &obj)
             {
-                gt::serialization::detail::json::tuple_tools::helper::deserialize(in, obj);
+                sl::detail::json::tuple_tools::helper::deserialize(in, obj);
             }
         };
 
@@ -810,7 +810,7 @@ namespace sl
                 i = i > k ? k : i;
                 auto size = i - in.position();
                 auto value = in.substr(size);
-                obj = gt::serialization::detail::to_value<T>(value.c_str());
+                obj = sl::detail::to_value<T>(value.c_str());
                 in += static_cast<int>(size);
             }
         };
@@ -837,8 +837,8 @@ namespace sl
         template<typename T>
         struct explicit_is_simple<json_oarchive, T>
         {
-            template<typename T>
-            static void serialize(json_oarchive &out, const T &obj)
+            template<typename U>
+            static void serialize(json_oarchive &out, const U &obj)
             {
                 explicit_is_simple_enum<json_oarchive, std::is_enum_v<std::decay_t<T>>>::serialize(out, obj);
             }
@@ -847,8 +847,8 @@ namespace sl
         template<typename T>
         struct explicit_is_simple<json_iarchive, T>
         {
-            template<typename T>
-            static void deserialize(json_iarchive &in, T &obj)
+            template<typename U>
+            static void deserialize(json_iarchive &in, U &obj)
             {
                 explicit_is_simple_enum<json_iarchive, std::is_enum_v<std::decay_t<T>>>::deserialize(in, obj);
             }

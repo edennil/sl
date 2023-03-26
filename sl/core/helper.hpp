@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tools.h"
+#include "basic.hpp"
 
 namespace information
 {
@@ -125,8 +125,8 @@ namespace sl
                 explicit_is_simple<Archive, working_type>::serialize(out, obj);
             }
 
-            template<typename Archive, typename T>
-            static void deserialize(Archive &in, T &obj)
+            template<typename Archive, typename U>
+            static void deserialize(Archive &in, U &obj)
             {
                 explicit_is_simple<Archive, working_type>::deserialize(in, obj);
             }             
@@ -140,16 +140,16 @@ namespace sl
             template<typename Archive>
             static void serialize(Archive &out, const T &obj)
             {
-                static constexpr bool has_serialize = gt::serialization::access::template has_serialize<T, void(Archive &, const unsigned int)>::value;
+                static constexpr bool has_serialize = sl::access::template has_serialize<T, void(Archive &, const unsigned int)>::value;
                 static constexpr bool is_polymorphic = std::is_polymorphic_v<std::decay_t<T>>;
                 with_serialize<is_polymorphic || has_serialize>::serialize(out, obj);
             }
 
-            template<typename Archive, typename T>
-            static void deserialize(Archive &in, T &obj)
+            template<typename Archive, typename U>
+            static void deserialize(Archive &in, U &obj)
             {
-                static constexpr bool has_deserialize = gt::serialization::access::template has_deserialize<T, void(Archive &, const unsigned int)>::value;
-                static constexpr bool is_polymorphic = std::is_polymorphic_v<std::decay_t<T>>;
+                static constexpr bool has_deserialize = sl::access::template has_deserialize<U, void(Archive &, const unsigned int)>::value;
+                static constexpr bool is_polymorphic = std::is_polymorphic_v<std::decay_t<U>>;
                 with_serialize<is_polymorphic || has_deserialize>::deserialize(in, obj);
             }
 
@@ -162,13 +162,13 @@ namespace sl
             template<typename Archive, typename T>
             static void serialize(Archive& out, const T& obj)
             {
-                without_serialize_with_version<gt::serialization::detail::class_data<T>::version>::serialize(out, obj);
+                without_serialize_with_version<sl::detail::class_data<T>::version>::serialize(out, obj);
             }
 
             template<typename Archive, typename T>
             static void deserialize(Archive& in, T& obj)
             {
-                without_serialize_with_version<gt::serialization::detail::class_data<T>::version>::deserialize(in, obj);
+                without_serialize_with_version<sl::detail::class_data<T>::version>::deserialize(in, obj);
             }
         };
 
@@ -195,23 +195,23 @@ namespace sl
         template<typename T>
         struct helper
         {
-            template<typename Archive, typename T>
-            static void serialize(Archive& out, const T& obj)
+            template<typename Archive, typename U>
+            static void serialize(Archive& out, const U& obj)
             {
-                is_simple<std::is_fundamental<T>::value || std::is_enum_v<T>, T>::serialize(out, obj);
+                is_simple<std::is_fundamental<U>::value || std::is_enum_v<U>, U>::serialize(out, obj);
             }
 
-            template<typename Archive, typename T>
-            static void deserialize(Archive& in, T& obj)
+            template<typename Archive, typename U>
+            static void deserialize(Archive& in, U& obj)
             {
-                is_simple<std::is_fundamental<T>::value || std::is_enum_v<T>, T>::deserialize(in, obj);
+                is_simple<std::is_fundamental<U>::value || std::is_enum_v<U>, U>::deserialize(in, obj);
             }
         };
 
         template<typename T, typename U, bool O>
-        struct helper<std::tuple<gt::serialization::detail::basic_property<T, U, O>, const char *, bool>>
+        struct helper<std::tuple<sl::detail::basic_property<T, U, O>, const char *, bool>>
         {
-            using type = std::tuple<gt::serialization::detail::basic_property<T, U, O>, const char *, bool>;
+            using type = std::tuple<sl::detail::basic_property<T, U, O>, const char *, bool>;
 
             template<typename Archive>
             static void serialize(Archive &out, const type &obj)
@@ -227,9 +227,9 @@ namespace sl
         };
 
         template<typename T, typename U, typename V, typename A>
-        struct helper<std::tuple<gt::serialization::detail::array_property<T, U, V, A>, const char *, bool>>
+        struct helper<std::tuple<sl::detail::array_property<T, U, V, A>, const char *, bool>>
         {
-            using type = std::tuple<gt::serialization::detail::array_property<T, U, V, A>, const char *, bool>;
+            using type = std::tuple<sl::detail::array_property<T, U, V, A>, const char *, bool>;
 
             template<typename Archive>
             static void serialize(Archive &out, const type &obj)

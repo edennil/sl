@@ -1,9 +1,11 @@
 #pragma once
 
-#include "json_serializer.h"
-#include "binary_serialize.h"
-#include "xml_serializer.h"
-#include "text_serializer.h"
+#include "json_serializer.hpp"
+#include "binary_serialize.hpp"
+#include "xml_serializer.hpp"
+#include "text_serializer.hpp"
+#include "access.hpp"
+#include "basic.hpp"
 
 #define SL_PROPERTY(A, B) sl::basic_property(&A, B)
 
@@ -23,23 +25,23 @@
 
 #define SL_SERIALIZABLE friend class sl::access
 
-#define SL_SERIALIZE_CLASS(A) namesapce sl{namespace serialization{namespace detail{\
+#define SL_SERIALIZE_CLASS(A) namespace sl{namespace detail{\
                                     template<> struct class_data<A>{\
                                     static constexpr unsigned int version = 0;\
                                     static constexpr char name[] = #A;\
-                                    static constexpr size_t size = dim(name) - 1;};}}}
+                                    static constexpr size_t size = dim(name) - 1;};}}
 
-#define SL_SERIALIZE_CLASS_VERSION_AND_NAME(A, version_value, NAME) namesapce sl{namespace serialization{namespace detail{\
+#define SL_SERIALIZE_CLASS_VERSION_AND_NAME(A, version_value, NAME) namespace sl{amespace detail{\
                                                     template<> struct class_data<A>{\
                                                     static constexpr unsigned int version = version_value;\
                                                     static constexpr char name[] = NAME;\
-                                                    static constexpr size_t size = dim(name) - 1;};}}}
+                                                    static constexpr size_t size = dim(name) - 1;};}}
 
-#define SL_SERIALIZE_CLASS_NAME(A, NAME) namespace sl{namespace serialization{namespace detail{\
+#define SL_SERIALIZE_CLASS_NAME(A, NAME) namespace sl{namespace detail{\
                                                     template<> struct class_data<A>{\
                                                     static constexpr unsigned int version = 0;\
                                                     static constexpr char name[] = NAME;\
-                                                    static constexpr size_t size = dim(name) - 1;};}}}
+                                                    static constexpr size_t size = dim(name) - 1;};}}
 
 #define COMBINE1(X, Y) X ## Y
 #define COMBINE(X, Y) COMBINE1(X, Y)

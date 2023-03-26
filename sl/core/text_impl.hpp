@@ -90,19 +90,17 @@ namespace sl
             {
                 index_++;
             }
-            index_--;
             return *this;
         }
 
         text_impl_iarchive &operator--(int)
         {
-            index_++;
+            index_--;
             const char *tmp_values = values_.c_str();
             while(tmp_values[index_] == '\t' || tmp_values[index_] == '\n' || tmp_values[index_] == ' ')
             {
                 index_--;
             }
-            index_--;
             return *this;
         }
 

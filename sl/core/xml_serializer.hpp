@@ -1,8 +1,8 @@
 #pragma once
 
 #include <sstream>
-#include "pointer_saver.h"
-#include "text_impl.h"
+#include "pointer_saver.hpp"
+#include "text_impl.hpp"
 
 namespace sl
 {

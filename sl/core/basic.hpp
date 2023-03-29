@@ -218,158 +218,15 @@ namespace sl
             std::string name_;
         };
 
-        //template<typename IN, typename OUT, typename A>
-        //struct builder_base
-        //{
-        //    virtual ~builder_base() = default;
-        //    builder_base() = default;
-
-        //    virtual bool test(const A *a) const = 0;
-        //    virtual void build(int version, IN &in, A *&output) = 0;
-        //    virtual void build(int version, IN &in, std::unique_ptr<A> &output) = 0;
-        //    virtual void build(int version, IN &in, std::shared_ptr<A> &output) = 0;
-        //    virtual void build(IN &in, A *&) const = 0;
-        //    virtual void build(IN &in, std::unique_ptr<A> &output) = 0;
-        //    virtual void build(IN &in, std::shared_ptr<A> &output) = 0;
-        //    virtual void save(A *a, OUT out) const = 0;
-        //    virtual const char *getClassName() const = 0;
-        //    virtual size_t getVersion() const = 0;
-        //};
-
-        //template<typename IN, typename OUT, typename A>
-        //struct builder_derivated : builder_base<IN, OUT, A>
-        //{
-        //    using base = std::decay_t<A>;
-
-        //    virtual ~builder_derivated() = default;
-        //    builder_derivated() = default;
-
-        //    template<typename C>
-        //    size_t get_type(const std::shared_ptr<C> &c)
-        //    {
-        //        return get_type(c.get());
-        //    }
-
-        //    template<typename C>
-        //    size_t get_type(const std::unique_ptr<C> &c)
-        //    {
-        //        return get_type(c.get());
-        //    }
-
-        //    template<typename C>
-        //    size_t get_type(C *c)
-        //    {
-        //        size_t i = 0;
-        //        for(const auto &v : builders_)
-        //        {
-        //            if(v->test(c))
-        //            {
-        //                return i;
-        //            }
-        //            i++;
-        //        }
-        //        // The link between the base and the derived class don't exist
-        //        throw std::bad_cast();
-        //    }
-
-        //    template<typename C>
-        //    void add(C *c)
-        //    {
-        //        bool is_found = false;
-        //        for(const auto &v : builders_)
-        //        {
-        //            if(v->test(c))
-        //            {
-        //                is_found = true;
-        //                break;
-        //            }
-        //        }
-        //        if(!is_found)
-        //        {
-        //            builders_.emplace_back(new builder_derivated<IN, OUT, A>());
-        //        }
-        //    }
-
-        //    template<typename T>
-        //    void build(size_t i, IN &in, T &ptr)
-        //    {
-        //        if(i < builders_.size())
-        //        {
-        //            return builders_[i]->build(in, ptr);
-        //        }
-        //        throw std::bad_alloc();
-        //    }
-
-        //    template<typename T>
-        //    void build(const std::string &name, int version, IN &in, T &ptr)
-        //    {
-        //        auto it = position_.find(name);
-        //        if(it != position_.end())
-        //        {
-        //            return builders_[it->second]->build(version, in, ptr);
-        //        }
-        //        else
-        //        {
-        //            size_t i = 0;
-        //            for(const auto &v : builders_)
-        //            {
-        //                const char * base_name = v->getClassName();
-        //                if(!strcmp(base_name, name.c_str()))
-        //                {
-        //                    position_.emplace(std::make_pair(name, i));
-        //                    return v->build(version, in, ptr);
-        //                }
-        //                i++;
-        //            }
-        //        }
-        //        throw std::bad_alloc();
-        //    }
-
-        //    void save(size_t i, A *t, OUT &out)
-        //    {
-        //        if(i < builders_.size())
-        //        {
-        //            return builders_[i]->save(t, out);
-        //        }
-        //        throw std::bad_cast();
-        //    }
-
-        //    const char * getClassName(size_t i) const
-        //    {
-        //        if(i < builders_.size())
-        //        {
-        //            return builders_[i]->getClassName();
-        //        }
-        //        throw std::bad_cast();
-        //    }
-
-        //    size_t getVersion(size_t i) const
-        //    {
-        //        if(i < builders_.size())
-        //        {
-        //            return builders_[i]->getVersion();
-        //        }
-        //        throw std::bad_cast();
-        //    }
-
-        //protected:
-
-        //    std::vector<builder_base<IN, OUT, A> *> builders_;
-        //    std::unordered_map<std::string, size_t> position_;
-
-        //};
-
         template<typename T, typename U>
         void link_derived(const T *t = nullptr, const U *u = nullptr)
         {
-            //sl::patterns::singleton<detail::builder_derivated<IN, OUT, T>::instance().add(u);
             sl::patterns::singleton<detail::builder<T>>::instance().add(u);
         }
 
         template<typename T, typename std::enable_if_t<!std::is_abstract<T>::value, int> = 0>
         void link_derived(const T *t = nullptr)
         {
-            //sl::patterns::singleton<detail::builder_derivated<IN, OUT, T>>::instance().add(t);
             sl::patterns::singleton<detail::builder<T>>::instance().add(t);
         }
 

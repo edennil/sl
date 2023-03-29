@@ -67,7 +67,7 @@ protected:
     template<typename Ar>
     void deserialize(Ar& ar, const unsigned int version)
     {
-        ar& std::make_tuple(SL_CAST_BASE(A, this), false)& std::make_tuple(properties, this);
+        ar& std::make_tuple(SL_CAST_BASE(A, this), false) & std::make_tuple(properties, this);
     }
 
     double b_;

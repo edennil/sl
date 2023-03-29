@@ -49,18 +49,9 @@
 #define SL_SERIALIZE_LINK_DERIVED(A, B) namespace {namespace COMBINE(PRIVATE, __LINE__){\
                                             struct link_register{link_register(){\
                                                 using namespace sl;\
-                                                detail::link_derived<json_iarchive, json_oarchive, A, B>();\
-                                                detail::link_derived<json_iarchive, json_oarchive, A>();\
-                                                detail::link_derived<json_iarchive, json_oarchive, B>();\
-                                                detail::link_derived<binary_iarchive, binary_oarchive, A, B>();\
-                                                detail::link_derived<binary_iarchive, binary_oarchive, A>();\
-                                                detail::link_derived<binary_iarchive, binary_oarchive, B>();\
-                                                detail::link_derived<xml_iarchive, xml_oarchive, A, B>();\
-                                                detail::link_derived<xml_iarchive, xml_oarchive, A>();\
-                                                detail::link_derived<xml_iarchive, xml_oarchive, B>();\
-                                                detail::link_derived<text_iarchive, text_oarchive, A, B>();\
-                                                detail::link_derived<text_iarchive, text_oarchive, A>();\
-                                                detail::link_derived<text_iarchive, text_oarchive, B>();}};\
+                                                detail::link_derived<A, B>();\
+                                                detail::link_derived<A>();\
+                                                detail::link_derived<B>();}};\
                                                 link_register tmp;}}
 
 #define SL_CAST_BASE(A, B) sl::cast_base<A>(B)

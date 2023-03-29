@@ -36,15 +36,14 @@ namespace sl
                     static void serialize_poly(json_oarchive &out, const PTR &obj)
                     {
                         using type = std::decay_t<typename ptr_wrapper<PTR>::type>;
-                        using memory_ptr = sl::patterns::singleton<sl::detail::builder_derivated<json_iarchive, json_oarchive, type>>;
+                        using memory_ptr = sl::patterns::singleton<sl::detail::builder<type>>;
 
                         auto id = out.id(obj);
                         if(id == -1)
                         {
                             id = out.add(obj);
-                            size_t index = memory_ptr::instance().get_type(ptr_wrapper<PTR>::get(obj));
-                            const auto &child_name = memory_ptr::instance().getClassName(index);
-                            auto version = memory_ptr::instance().getVersion(index);
+                            const auto &child_name = memory_ptr::instance().name(ptr_wrapper<PTR>::get(obj));
+                            auto version = memory_ptr::instance().version(ptr_wrapper<PTR>::get(obj));
                             auto tmp = std::string("{\"object\":\"") + class_data<type>::name + "\",\"@ptr\":" + std::to_string(id);
                             out.get() << tmp;
                             if(version != 0)
@@ -54,7 +53,7 @@ namespace sl
                             }
                             tmp = ",\"" + std::string(child_name) + "\":{";
                             out.get() << tmp;
-                            memory_ptr::instance().save(index, ptr_wrapper<PTR>::get(obj), out);
+                            memory_ptr::instance().save(ptr_wrapper<PTR>::get(obj), out);
                             out.get() << '}';
                             out.get() << '}';
                         }
@@ -90,7 +89,7 @@ namespace sl
                             in += static_cast<int>(size_child + 1);
                             in++;
                             in++;
-                            sl::patterns::singleton<detail::builder_derivated<json_iarchive, json_oarchive, type>>::instance().build(child_name, version, in, obj);
+                            sl::patterns::singleton<detail::builder<type>>::instance().build(child_name, version, in, obj);
                             in++;
                         };
 
@@ -491,7 +490,7 @@ namespace sl
         {
             using type = std::tuple<detail::basic_property<T, U, O>, T *, bool>;
 
-            static void deserialize(json_iarchive &in, type &&all_obj)
+            static void deserialize(json_iarchive &in, type &all_obj)
             {
                 const auto &property = std::get<0>(all_obj);
                 const auto &obj = std::get<1>(all_obj);
@@ -507,10 +506,10 @@ namespace sl
                         return;
                     }
                     throw std::exception();
-                }
+                }\
                 in += label_size + 1;
                 in++;
-                helper<type>::deserialize(in, (*obj).*(property.member_));
+                helper<property_t>::deserialize(in, (*obj).*(property.member_));
                 if(!is_end)
                 {
                     in++;
@@ -523,7 +522,7 @@ namespace sl
         {
             using type = std::tuple<detail::array_property<C, T, U, A>, C *, bool>;
 
-            static void deserialize(json_iarchive &in, type &&all_obj)
+            static void deserialize(json_iarchive &in, type &all_obj)
             {
                 const auto &property = std::get<0>(all_obj);
                 const auto &obj = std::get<1>(all_obj);
@@ -608,7 +607,7 @@ namespace sl
                 }
                 auto len = detail::class_data<T>::size;
                 in++;
-                if(in.compare(detail::class_data<T>::name, len))
+                if(!in.compare(detail::class_data<T>::name, len))
                 {
                     throw std::exception();
                 }
@@ -624,7 +623,7 @@ namespace sl
         struct explicit_helper<json_oarchive, std::tuple<P, T *>>
         {
 
-            static void serialize(json_oarchive &out, std::tuple<P, T *> &&all_obj)
+            static void serialize(json_oarchive &out, const std::tuple<P, T *> &all_obj)
             {
                 const auto &properties = std::get<0>(all_obj);
                 const auto *obj = std::get<1>(all_obj);
@@ -658,7 +657,7 @@ namespace sl
                 {
                     const auto &property = std::get<i>(properties);
                     auto to_deserialize = std::make_tuple(property, obj, i != size - 1 ? false : true);
-                    detail::helper<decltype(to_deserialize)>::deserialize(in, std::move(to_deserialize));
+                    detail::helper<decltype(to_deserialize)>::deserialize(in, to_deserialize);
                 });
             }
         };

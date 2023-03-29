@@ -283,7 +283,7 @@ namespace sl
             template<typename Archive>
             static void deserialize(Archive &out, type &&obj)
             {
-                explicit_helper<Archive, type>::serialize(out, std::move(obj));
+                explicit_helper<Archive, type>::deserialize(out, std::move(obj));
             }
         };
 
@@ -300,7 +300,7 @@ namespace sl
             template<typename Archive>
             static void deserialize(Archive &out, std::string &obj)
             {
-                explicit_helper<Archive, std::string>::serialize(out, obj);
+                explicit_helper<Archive, std::string>::deserialize(out, obj);
             }
         };
 
@@ -385,7 +385,7 @@ namespace sl
             template<typename Archive>
             static void deserialize(Archive &out, std::tuple<A...> &obj)
             {
-                explicit_helper<Archive, std::tuple<A...>>::serialize(out, obj);
+                explicit_helper<Archive, std::tuple<A...>>::deserialize(out, obj);
             }
         };
 

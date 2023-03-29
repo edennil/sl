@@ -33,7 +33,7 @@ namespace sl
             {
                 auto memory = static_cast<void *>(ptr);
                 auto it = pointers_.find(memory);
-                if(it != pointers_.end())
+                if(it == pointers_.end())
                 {
                     auto size = positions_.size();
                     positions_.emplace_back(memory);
@@ -48,7 +48,7 @@ namespace sl
             {
                 auto memory = static_cast<void *>(ptr.get());
                 auto it = pointers_.find(memory);
-                if(it != pointers_.end())
+                if(it == pointers_.end())
                 {
                     auto size = positions_.size();
                     positions_.emplace_back(memory);
@@ -63,7 +63,7 @@ namespace sl
             {
                 auto memory = static_cast<void *>(ptr.get());
                 auto it = pointers_.find(memory);
-                if(it != pointers_.end())
+                if(it == pointers_.end())
                 {
                     auto size = positions_.size();
                     positions_.emplace_back(memory);
@@ -125,7 +125,7 @@ namespace sl
             {
                 auto memory = static_cast<void *>(ptr);
                 auto it = pointers_.find(memory);
-                if(it != pointers_.end())
+                if(it == pointers_.end())
                 {
                     pointers_.emplace(memory, positions_.size());
                     positions_.emplace_back(memory, nullptr);
@@ -139,7 +139,7 @@ namespace sl
             {
                 auto memory = static_cast<void *>(ptr.get());
                 auto it = pointers_.find(memory);
-                if(it != pointers_.end())
+                if(it == pointers_.end())
                 {
                     pointers_.emplace(memory, positions_.size());
                     positions_.emplace_back(memory, std::static_pointer_cast<void>(ptr));
@@ -153,7 +153,7 @@ namespace sl
             {
                 auto memory = static_cast<void *>(ptr.get());
                 auto it = pointers_.find(memory);
-                if(it != pointers_.end())
+                if(it == pointers_.end())
                 {
                     pointers_.emplace(memory, positions_.size());
                     unique_ptr_.emplace(positions_.size());
@@ -168,7 +168,7 @@ namespace sl
             {
                 auto memory = static_cast<void *>(ptr);
                 auto it = pointers_.find(memory);
-                if(it != pointers_.end())
+                if(it == pointers_.end())
                 {
                     if(position + 1 > positions_.size())
                     {
@@ -186,7 +186,7 @@ namespace sl
             {
                 auto memory = static_cast<void *>(ptr.get());
                 auto it = pointers_.find(memory);
-                if(it != pointers_.end())
+                if(it == pointers_.end())
                 {
                     if(position + 1 > positions_.size())
                     {
@@ -204,7 +204,7 @@ namespace sl
             {
                 auto memory = static_cast<void *>(ptr.get());
                 auto it = pointers_.find(memory);
-                if(it != pointers_.end())
+                if(it == pointers_.end())
                 {
                     if(position + 1 > positions_.size())
                     {

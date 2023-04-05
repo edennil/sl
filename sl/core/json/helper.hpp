@@ -667,7 +667,7 @@ namespace sl
         {
             static void serialize(json_oarchive& out, const std::vector<A>& obj)
             {
-                constexpr static bool is_simple_value = std::is_fundamental_v<A> >> std::is_same_v<A, std::string>;
+                constexpr static bool is_simple_value = std::is_fundamental_v<A> || std::is_same_v<A, std::string>;
                 sl::detail::json::vector_tools::helper<is_simple_value>::serialize(out, obj);
             }
         };
@@ -675,9 +675,9 @@ namespace sl
         template<typename A>
         struct explicit_helper<json_iarchive, std::vector<A>>
         {
-            static void serialize(json_iarchive &out, std::vector<A> &obj)
+            static void deserialize(json_iarchive &out, std::vector<A> &obj)
             {
-                constexpr static bool is_simple_value = std::is_fundamental_v<A> >> std::is_same_v<A, std::string>;
+                constexpr static bool is_simple_value = std::is_fundamental_v<A> || std::is_same_v<A, std::string>;
                 sl::detail::json::vector_tools::helper<is_simple_value>::deserialize(out, obj);
             }
         };
@@ -704,10 +704,10 @@ namespace sl
             }
         };
 
-        template<typename K, typename V>
-        struct explicit_helper<json_oarchive, std::unordered_map<K, V>>
+        template<typename K, typename V, typename H, typename E>
+        struct explicit_helper<json_oarchive, std::unordered_map<K, V, H, E>>
         {
-            static void serialize(json_oarchive& out, const std::unordered_map<K, V>& obj)
+            static void serialize(json_oarchive& out, const std::unordered_map<K, V, H, E>& obj)
             {
                 constexpr static bool is_simple_key = std::is_fundamental_v<K> || std::is_same_v<K, std::string>;
                 constexpr static bool is_simple_value = std::is_fundamental_v<V> || std::is_same_v<V, std::string>;
@@ -715,10 +715,10 @@ namespace sl
             }
         };
 
-        template<typename K, typename V>
-        struct explicit_helper<json_iarchive, std::unordered_map<K, V>>
+        template<typename K, typename V, typename H, typename E>
+        struct explicit_helper<json_iarchive, std::unordered_map<K, V, H, E>>
         {
-            static void deserialize(json_iarchive& out, const std::unordered_map<K, V>& obj)
+            static void deserialize(json_iarchive& out, std::unordered_map<K, V, H, E>& obj)
             {
                 constexpr static bool is_simple_key = std::is_fundamental_v<K> || std::is_same_v<K, std::string>;
                 constexpr static bool is_simple_value = std::is_fundamental_v<V> || std::is_same_v<V, std::string>;
@@ -726,10 +726,32 @@ namespace sl
             }
         };
 
-        template<typename K, typename V>
-        struct explicit_helper<json_oarchive, std::map<K, V>>
+        template<typename K, typename V, class H, class E, class A>
+        struct explicit_helper<json_oarchive, std::unordered_multimap<K, V, H, E, A>>
         {
-            static void serialize(json_oarchive &out, const std::map<K, V> &obj)
+            static void serialize(json_oarchive& out, const std::unordered_multimap<K, V, H, E>& obj)
+            {
+                constexpr static bool is_simple_key = std::is_fundamental_v<K> || std::is_same_v<K, std::string>;
+                constexpr static bool is_simple_value = std::is_fundamental_v<V> || std::is_same_v<V, std::string>;
+                sl::detail::json::map_tools::helper<is_simple_key, is_simple_value>::serialize(out, obj);
+            }
+        };
+
+        template<typename K, typename V, class H, class E, class A>
+        struct explicit_helper<json_iarchive, std::unordered_multimap<K, V, H, E, A>>
+        {
+            static void deserialize(json_iarchive& out, std::unordered_multimap<K, V, H, E>& obj)
+            {
+                constexpr static bool is_simple_key = std::is_fundamental_v<K> || std::is_same_v<K, std::string>;
+                constexpr static bool is_simple_value = std::is_fundamental_v<V> || std::is_same_v<V, std::string>;
+                sl::detail::json::map_tools::helper<is_simple_key, is_simple_value>::deserialize(out, obj);
+            }
+        };
+
+        template<typename K, typename V, typename C, typename A>
+        struct explicit_helper<json_oarchive, std::map<K, V, C, A>>
+        {
+            static void serialize(json_oarchive &out, const std::map<K, V, C, A> &obj)
             {
                 constexpr static bool is_simple_key = std::is_fundamental_v<K> || std::is_same_v<K, std::string>;
                 constexpr static bool is_simple_value = std::is_fundamental_v<V> || std::is_same_v<V, std::string>; 
@@ -737,10 +759,10 @@ namespace sl
             }
         };
 
-        template<typename K, typename V>
-        struct explicit_helper<json_iarchive, std::map<K, V>>
+        template<typename K, typename V, typename C, typename A>
+        struct explicit_helper<json_iarchive, std::map<K, V, C, A>>
         {
-            static void deserialize(json_iarchive &out, const std::map<K, V> &obj)
+            static void deserialize(json_iarchive &out, std::map<K, V, C, A>&obj)
             {
                 constexpr static bool is_simple_key = std::is_fundamental_v<K> || std::is_same_v<K, std::string>;
                 constexpr static bool is_simple_value = std::is_fundamental_v<V> || std::is_same_v<V, std::string>; 

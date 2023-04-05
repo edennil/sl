@@ -51,8 +51,53 @@ namespace sl
 
         template<typename Left, typename Right, operation op, typename _ = void>
         struct operations;
+        
+        template<typename Left, typename Right> 
+        struct operations<Left, Right, eq, std::enable_if_t<std::is_arithmetic_v<Left>&& std::is_arithmetic_v<Right>>> {
 
-        _OPERATIONS_(eq, ==, " != " );
+            static std::tuple<bool, std::string> apply(const Left& left, const Right& right) 
+            {
+                if (tolerance() == 0.) 
+                {
+                    return std::make_tuple(left == right, std::string()); 
+                }
+                return compare_with_tolerance(left, right);
+            }
+
+            static std::string report(const Left& left, const Right& right) 
+            {
+                std::string res; 
+                res += '[';
+                res += std::to_string(left);
+                res += " != " ; 
+                res += std::to_string(right);
+                res += ']'; 
+                return res; 
+            }
+
+        };
+
+        template<typename Left, typename Right> 
+        struct operations<Left, Right, eq, std::enable_if_t<!std::is_arithmetic_v<Left> || !std::is_arithmetic_v<Right>>>
+        {
+            static std::tuple<bool, std::string> apply(const Left& left, const Right& right)
+            {
+                return std::make_tuple(left == right, std::string());
+            }
+
+            static std::string report(const Left& left, const Right& right)
+            {
+                std::string res;
+                //res += '['; 
+                //res += left;
+                //res += " != ";
+                //res += right; 
+                //res += ']';
+                return res;
+            }
+        };
+
+        //_OPERATIONS_(eq, ==, " != " );
         _OPERATIONS_(neq, !=, " == " );
         _OPERATIONS_(gt, > , " <= ");
         _OPERATIONS_(lt, < , " >= ");

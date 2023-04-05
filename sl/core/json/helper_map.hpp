@@ -49,7 +49,7 @@ namespace sl
                     }
 
                     template<typename container>
-                    static void deserialize(json_iarchive& in, const container& obj)
+                    static void deserialize(json_iarchive& in, container& obj)
                     {
                         using key_type = typename container::key_type;
                         using mapped_type = typename container::mapped_type;
@@ -59,9 +59,9 @@ namespace sl
                         {
                             key_type key;
                             mapped_type value;
-                            sl::detail::json::fundamenta_tools::helper<key_type>::deserialize(in, key);
+                            sl::detail::json::fundamenta_tools::helper_key_in_map<key_type>::deserialize(in, key);
                             in++;
-                            sl::detail::json::fundamenta_tools::helper<mapped_type>::deserialize(in, value);
+                            sl::detail::json::fundamenta_tools::helper_in_vector<mapped_type>::deserialize(in, value);
                             obj.emplace(std::move(key), std::move(value));
                             if (in.compare('}'))
                             {

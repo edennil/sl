@@ -321,20 +321,20 @@ namespace sl
             }
         };
 
-        template<typename K, typename V>
-        struct helper<std::map<K, V>>
+        template<typename K, typename V, typename C, typename A>
+        struct helper<std::map<K, V, C, A>>
         {
 
             template<typename Archive>
-            static void serialize(Archive &out, const std::map<K, V> &obj)
+            static void serialize(Archive &out, const std::map<K, V, C, A> &obj)
             {
                 explicit_helper<Archive, std::map<K, V>>::serialize(out, obj);
             }
 
             template<typename Archive>
-            static void deserialize(Archive &out, std::map<K, V> &obj)
+            static void deserialize(Archive &out, std::map<K, V, C, A>& obj)
             {
-                explicit_helper<Archive, std::map<K, V>>::serialize(out, obj);
+                explicit_helper<Archive, std::map<K, V>>::deserialize(out, obj);
             }
         };
 
@@ -351,7 +351,7 @@ namespace sl
             template<typename Archive>
             static void deserialize(Archive &out, std::unordered_map<K, V> &obj)
             {
-                explicit_helper<Archive, std::unordered_map<K, V>>::serialize(out, obj);
+                explicit_helper<Archive, std::unordered_map<K, V>>::deserialize(out, obj);
             }
         };
 
@@ -368,7 +368,7 @@ namespace sl
             template<typename Archive>
             static void deserialize(Archive &out, std::unordered_multimap<K, V, H, E, A> &obj)
             {
-                explicit_helper<Archive, std::unordered_multimap<K, V, H, E, A>>::serialize(out, obj);
+                explicit_helper<Archive, std::unordered_multimap<K, V, H, E, A>>::deserialize(out, obj);
             }
         };
 

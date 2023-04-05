@@ -48,6 +48,12 @@ namespace sl
             return std::atoi(value);
         }
 
+        template<>
+        float to_value(const char* value)
+        {
+            return std::stof(value);
+        }
+
     } // namepace detail
     
 } // namespace sl

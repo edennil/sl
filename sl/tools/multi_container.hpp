@@ -11,6 +11,30 @@ namespace sl
         namespace detail
         {
 
+            struct add_pp
+            {
+                template<typename...T>
+                static void apply(T &&...t)
+                {
+                    ((t++),...);
+                }
+            };
+
+            struct star
+            {
+                template<typename...T>
+                static auto apply(T &&...t)
+                {
+                    return std::forward_as_tuple(*t ...);
+                }
+            };
+
+            template<typename F, typename D, std::size_t... I>
+            auto calculate(D &&d, std::index_sequence<I...>)
+            {
+                return F::apply(std::get<I>(d)...);
+            }
+
             template<typename...T>
             class multi_iterator
             {
@@ -24,6 +48,13 @@ namespace sl
                 ~multi_iterator() = default;
                 multi_iterator() = default;
 
+                template<typename... U>
+                multi_iterator(U &&...u)
+                    :iterators_(forward<T>(u)...)
+                {
+
+                }
+
                 bool operator!=(const multi_iterator &rhs) const
                 {
                     bool res = true;
@@ -35,9 +66,7 @@ namespace sl
 
                 multi_iterator& operator++()
                 {
-                    sl::tools::for_each(std::make_index_sequence<size>{}, [&](auto i) {
-                        std::get<i>(iterators_)++;
-                        });
+                    calculate<add_pp>(iterators_, std::make_index_sequence<size>{});
                     return *this;
                 }
 
@@ -51,18 +80,42 @@ namespace sl
                     return it;
                 }
 
-                iterators & operator*()
+                auto operator*()
                 {
-                    return iterators_;
+                    return calculate<star>(iterators_, std::make_index_sequence<size>{});
                 }
 
-                const iterators& operator*() const
+                auto operator*() const
                 {
-                    return iterators_;
+                    return calculate<star>(iterators_, std::make_index_sequence<size>{});
                 }
 
 
                 iterators iterators_;
+            };
+
+            template<typename... T>
+            auto make_iter(T &&...t)
+            {
+                return multi_iterator<T...>(std::forward<T>(t)...);
+            }
+
+            struct begin_function
+            {
+                template<typename...T>
+                static auto apply(T &&...t)
+                {
+                    return make_iter(t.begin()...);
+                }
+            };
+
+            struct end_function
+            {
+                template<typename...T>
+                static auto apply(T &&...t)
+                {
+                    return make_iter(t.end()...);
+                }
             };
 
             template<typename... T>
@@ -71,8 +124,6 @@ namespace sl
             public:
 
                 constexpr static std::size_t size = std::tuple_size_v<std::tuple<T...>>;
-                using iterator = multi_iterator<typename std::decay_t<T>::iterator...>;
-                using const_iterator = multi_iterator<typename std::decay_t<T>::const_iterator...>;
 
                 ~multi_container() = default;
                 multi_container() = delete;
@@ -84,41 +135,24 @@ namespace sl
 
                 }
 
-                iterator begin()
+                auto begin()
                 {
-
-                    iterator it;
-                    sl::tools::for_each(std::make_index_sequence<size>{}, [&](auto i) {
-                        std::get<i>(it.iterators_) = std::get<i>(data_).begin();
-                        });
-                    return it;
+                    return calculate<begin_function>(data_, std::make_index_sequence<size>{});
                 }
 
-                iterator end()
+                auto end()
                 {
-                    iterator it;
-                    sl::tools::for_each(std::make_index_sequence<size>{}, [&](auto i) {
-                        std::get<i>(it.iterators_) = std::get<i>(data_).end();
-                        });
-                    return it;
+                    return calculate<end_function>(data_, std::make_index_sequence<size>{});
                 }
 
-                const_iterator begin() const
+                auto begin() const
                 {
-                    const_iterator it;
-                    sl::tools::for_each(std::make_index_sequence<size>{}, [&](auto i) {
-                        std::get<i>(it.iterators_) = std::get<i>(data_).begin();
-                        });
-                    return it;
+                    return calculate<begin_function>(data_, std::make_index_sequence<size>{});
                 }
 
-                const_iterator end() const
+                auto end() const
                 {
-                    const_iterator it;
-                    sl::tools::for_each(std::make_index_sequence<size>{}, [&](auto i) {
-                        std::get<i>(it.iterators_) = std::get<i>(data_).end();
-                        });
-                    return it;
+                    return calculate<end_function>(data_, std::make_index_sequence<size>{});
                 }
 
             protected:

@@ -6,7 +6,7 @@ enable_testing()
 
 set(CMAKE_CXX_STANDARD 20)
 
-set(SOURCES src/main.cpp tests/test_environment_test.cpp)
+set(SOURCES src/main.cpp tests/test_environment_test.cpp tests/test_tools.cpp)
 
 add_executable(sl_test ${SOURCES})
 
@@ -19,3 +19,7 @@ set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
 
 add_test(NAME environment_test COMMAND sl_test --run=environment_test)
+add_test(NAME test_zip_vector COMMAND sl_test --run=tools_test/test_zip_vector)
+add_test(NAME test_zip_map COMMAND sl_test --run=tools_test/test_zip_map)
+add_test(NAME test_zip_vector_map COMMAND sl_test --run=tools_test/test_zip_vector_map)
+

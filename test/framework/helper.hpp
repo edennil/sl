@@ -368,7 +368,7 @@ namespace sl
                                 }
                                 else
                                 {
-                                    res = operations<value_left, value_right, eq>::apply(std::get<0>(v).second, std::get<1>(v).second, path);
+                                    res = operations<value_left, value_right, op>::apply(std::get<0>(v).second, std::get<1>(v).second, path);
                                     if (!std::get<0>(res))
                                     {
                                         return res;
@@ -379,7 +379,7 @@ namespace sl
                             else
                             {
                                 path.emplace(std::to_string(i));
-                                auto res = operations<value_left, value_right, eq>::apply(std::get<0>(v), std::get<1>(v), path);
+                                auto res = operations<value_left, value_right, op>::apply(std::get<0>(v), std::get<1>(v), path);
                                 if (!std::get<0>(res))
                                 {
                                     return res;
@@ -405,7 +405,7 @@ namespace sl
                                     out << " problem with the keys in the position " << i;
                                     return std::make_tuple(false, out.str());
                                 }
-                                res = operations<value_left, value_right, eq>::apply(std::get<0>(v).second, std::get<1>(v).second);
+                                res = operations<value_left, value_right, op>::apply(std::get<0>(v).second, std::get<1>(v).second);
                                 if (!std::get<0>(res))
                                 {
                                     std::stringstream out;
@@ -417,7 +417,7 @@ namespace sl
                             else
                             {
                                 path.emplace(std::to_string(i));
-                                auto res = operations<value_left, value_right, eq>::apply(std::get<0>(v), std::get<1>(v));
+                                auto res = operations<value_left, value_right, op>::apply(std::get<0>(v), std::get<1>(v));
                                 if (!std::get<0>(res))
                                 {
                                     return res;;

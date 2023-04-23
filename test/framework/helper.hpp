@@ -21,7 +21,7 @@
 #define _OPERATORS_EXPR_(OP, type) template<typename Left, typename Right> expr<variable<Left>, Right, type> operator OP(const variable<Left>& l, Right&& r) { return expr<variable<Left>, Right, type>(l, std::forward<Right>(r));}
 
 #define _CALCULUS_(type, OP, inv_OP)         template<> struct calculus<type> { template<typename Left, typename Right> static bool apply(const Left& left, const Right& right){ return left OP right;} \
-                                                static const std::string inverse(){static std::string label(inv_OP);return label;}}
+                                                static const std::string &inverse(){static std::string label(inv_OP);return label;}}
 
 namespace sl
 {

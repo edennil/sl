@@ -122,7 +122,7 @@ SL_ADD_TEST_CASE(composed_containers)
 
 SL_ADD_TEST_CASE(simple_tuple)
 {
-    auto a = std::make_tuple(std::string("hi"), 2., 2);
+    auto a = std::make_tuple(std::string("hi"), 1., 2);
     auto b = std::make_tuple(std::string("hi"), 1., 2);
     SL_TEST(a == b);
 }

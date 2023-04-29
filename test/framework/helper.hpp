@@ -469,11 +469,11 @@ namespace sl
                             {
                                 std::stringstream out;
                                 out << "Problem in the element " << i << " of the tuple, with error " << std::get<1>(res);
-                                output = std::make_tuple(true, out.str());
+                                output = std::make_tuple(false, out.str());
                             }
                         }
                     });
-                    return std::make_tuple(true, std::string());
+                    return output;
                 }
                 return std::make_tuple(false, std::string("incorrect size"));
             }

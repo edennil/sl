@@ -30,6 +30,66 @@ namespace sl
             constexpr static unsigned int version = 0;
         };
 
+        template<typename T>
+        struct ptr_wrapper
+        {
+            using type = typename T::element_type;
+            static type* get(const T& obj)
+            {
+                return obj.get();
+            }
+
+            template<typename U>
+            static void create(T& obj)
+            {
+                obj = T(new type);
+            }
+        };
+
+        template<typename T>
+        struct ptr_wrapper<T*>
+        {
+
+            using type = T;
+            static type* get(T* obj)
+            {
+                return obj;
+            }
+
+            template<typename U>
+            static void create(U& obj)
+            {
+                obj = new type;
+            }
+        };
+
+        template<typename T>
+        struct ptr_wrapper<std::shared_ptr<T>>
+        {
+            using type = T;
+            static type* get(const std::shared_ptr<T>& obj)
+            {
+                return obj.get();
+            }
+
+            template<typename U>
+            static void create(U& obj)
+            {
+                obj = std::make_shared<type>();
+            }
+        };
+
+        template<typename A>
+        struct ptr_array
+        {
+
+            template<typename SIZE, typename T>
+            static void create(SIZE size, T*& obj)
+            {
+                obj = A::template allocate<T>(size);
+            }
+        };
+
         template<typename A>
         struct builder;
 
@@ -273,66 +333,6 @@ namespace sl
             U C::*member2_;
             const char *name_;
             constexpr static bool optional_{false};
-        };
-
-        template<typename T>
-        struct ptr_wrapper
-        {
-            using type = typename T::element_type;
-            static type *get(const T &obj)
-            {
-                return obj.get();
-            }
-
-            template<typename U>
-            static void create(T &obj)
-            {
-                obj = T(new type);
-            }
-        };
-
-        template<typename T>
-        struct ptr_wrapper<T *>
-        {
-
-            using type = T;
-            static type *get(T *obj)
-            {
-                return obj;
-            }
-
-            template<typename U>
-            static void create(U &obj)
-            {
-                obj = new type;
-            }
-        };
-
-        template<typename T>
-        struct ptr_wrapper<std::shared_ptr<T>>
-        {
-            using type = T;
-            static type *get(const std::shared_ptr<T> &obj)
-            {
-                return obj.get();
-            }
-
-            template<typename U>
-            static void create(U &obj)
-            {
-                obj = std::make_shared<type>();
-            } 
-        };
-
-        template<typename A>
-        struct ptr_array
-        {
-
-            template<typename SIZE, typename T>
-            static void create(SIZE size, T *&obj)
-            {
-                obj = A::template allocate<T>(size);
-            }
         };
 
     } // namespace detail

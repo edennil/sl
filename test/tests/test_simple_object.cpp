@@ -24,7 +24,7 @@ public:
         SL_TEST(double_number_ == ref.double_number_);
         SL_TEST(float_number_ == ref.float_number_);
         SL_TEST(size_t_number_ == ref.size_t_number_);
-        //SL_TEST(bool_value_ == ref.bool_value_);
+        SL_TEST(bool_value_ == ref.bool_value_);
         return true;
     }
 
@@ -81,6 +81,7 @@ public:
     std::unordered_map<std::string, double>& std_unordered_map() { return std_unordered_map_; }
     std::unordered_multimap<int, double>& std_unordered_multimap() { return std_unordered_multimap_; }
     std::tuple<std::string, double, int>& std_tuple() { return std_tuple_; }
+
 protected:
 
     SL_SERIALIZABLE;

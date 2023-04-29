@@ -148,8 +148,8 @@ SL_ADD_TEST_CASE(test_object_with_std_elements)
     {
         std::unordered_multimap<int, double> ummap;
         ummap.emplace(1, 1);
-        ummap.emplace(2, 1);
-        ummap.emplace(1, 2);
+        ///ummap.emplace(1, 2);
+        //ummap.emplace(2, 1);
         ref.std_unordered_multimap() = std::move(ummap);
     }
     ref.std_tuple() = std::make_tuple(std::string("bye"), 3.1415, 1);

@@ -145,7 +145,7 @@ namespace sl
                 std::map<std::string, std::map<std::string, std::vector<std::string>>> messages_;
 
                 std::string file_;
-                int line_;
+                int line_ = -1;
                 std::string operation_;
                 std::string message_;
                 bool error_ = false;

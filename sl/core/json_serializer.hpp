@@ -1,7 +1,7 @@
 #pragma once
 
-#include "text_impl.h"
-#include "pointer_saver.h"
+#include "text_impl.hpp"
+#include "pointer_saver.hpp"
 
 namespace sl
 {

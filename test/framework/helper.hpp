@@ -13,6 +13,7 @@
 #include <sl/macros/NARG.h>
 #include <sl/macros/EQUAL.h>
 #include <sl/tools/zip.hpp>
+#include <sl//tools/for_each.hpp>
 
 #include <type_traits>
 
@@ -25,6 +26,7 @@
 
 namespace sl
 {
+
     namespace test
     {
 
@@ -33,16 +35,24 @@ namespace sl
 
             struct traits_base
             {
+                constexpr static bool is_boolean = false;
                 constexpr static bool is_arithmetic = false;
                 constexpr static bool is_string = false;
                 constexpr static bool is_container = false;
                 constexpr static bool is_key_container = false;
+                constexpr static bool is_tuple = false;
             };
 
             template<typename T>
             struct traits : public traits_base
             {
                 constexpr static bool is_arithmetic = std::is_arithmetic_v<T>;
+            };
+
+            template<>
+            struct traits<bool> : public traits_base
+            {
+                constexpr static bool is_boolean = true;
             };
 
             template<class C, class T, class A>
@@ -104,6 +114,12 @@ namespace sl
                 constexpr static bool is_key_container = true;
             };
 
+            template<typename... T>
+            struct traits<std::tuple<T...>> : public traits_base
+            {
+                constexpr static bool is_tuple = true;
+            };
+
             template<typename Left, typename Right>
             struct traits_double
             {
@@ -112,9 +128,11 @@ namespace sl
                 using traits_right = traits<std::decay_t<Right>>;
 
                 constexpr static bool is_arithmetic = traits_left::is_arithmetic && traits_right::is_arithmetic;
+                constexpr static bool is_boolean = traits_left::is_boolean && traits_right::is_boolean;
                 constexpr static bool is_string = traits_left::is_string && traits_right::is_string;
                 constexpr static bool is_container = traits_left::is_container && traits_right::is_container;
                 constexpr static bool is_key_container = traits_left::is_key_container && traits_right::is_key_container;
+                constexpr static bool is_tuple = traits_left::is_tuple && traits_right::is_tuple;
             };
 
         } // namespace detail
@@ -144,7 +162,7 @@ namespace sl
             return std::make_tuple(true, std::string());
         }
 
-        template<typename Left, typename Right, std::enable_if_t<traits_double<Left, Right>::is_string, int>* = nullptr>
+        template<typename Left, typename Right, std::enable_if_t<traits_double<Left, Right>::is_string || traits_double<Left, Right>::is_boolean, int>* = nullptr>
         std::tuple<bool, std::string> compare_with_tolerance(const Left& left, const Right& right)
         {
             auto res = left == right;
@@ -176,7 +194,7 @@ namespace sl
         struct operations;
 
         template<typename Left, typename Right, operation op>
-        struct operations<Left, Right, op, std::enable_if_t<traits_double<Left, Right>::is_arithmetic || traits_double<Left, Right>::is_string>>
+        struct operations<Left, Right, op, std::enable_if_t<traits_double<Left, Right>::is_arithmetic || traits_double<Left, Right>::is_string || traits_double<Left, Right>::is_boolean>>
         {
             static std::tuple<bool, std::string> apply(const Left &left, const Right &right)
             {
@@ -342,11 +360,6 @@ namespace sl
                 return std::make_tuple(false, std::string("incorrect size"));
             }
 
-            static std::string report(const Left& left, const Right& right)
-            {
-                return std::string();
-            }
-
             static std::tuple<bool, std::string> apply(const Left& left, const Right& right, std::stack<std::string>& path)
             {
                 if (left.size() == right.size())
@@ -433,6 +446,34 @@ namespace sl
             }
         };
 
+        template<typename Left, typename Right, operation op>
+        struct operations<Left, Right, op, std::enable_if_t<traits_double<Left, Right>::is_tuple>>
+        {
+            static std::tuple<bool, std::string> apply(const Left& left, const Right& right)
+            {
+                if constexpr (std::tuple_size_v<Left> == std::tuple_size_v<Right>)
+                {
+                    const auto size = std::tuple_size_v<Left>;
+                    std::tuple<bool, std::string> output = std::make_tuple(true, std::string());
+                    sl::tools::for_each(std::make_index_sequence<size>{}, [&](auto i)
+                    {
+                        if (std::get<0>(output))
+                        {
+                            auto res = operations<std::tuple_element_t<i, Left>, std::tuple_element_t<i, Right>, op>::apply(std::get<i>(left), std::get<i>(right));
+                            if (!std::get<0>(res))
+                            {
+                                std::stringstream out;
+                                out << "Problem in the element " << i << " of the tuple, with error " << std::get<1>(res);
+                                output = std::make_tuple(false, out.str());
+                            }
+                        }
+                    });
+                    return output;
+                }
+                return std::make_tuple(false, std::string("incorrect size"));
+            }
+        };
+
         template<typename T>
         struct variable;
 
@@ -463,11 +504,6 @@ namespace sl
                 return std::make_tuple(static_cast<bool>(value_), std::string());
             }
 
-            std::string report() const
-            {
-                return "";
-            }
-
             T value_;
         };
 
@@ -486,11 +522,6 @@ namespace sl
             std::tuple<bool, std::string> validate() const
             {
                 return operations<left, right, op>::apply(left_.value_, right_);
-            }
-
-            std::string report() const
-            {
-                return operations<left, right, op>::report(left_.value_, right_);
             }
 
             Left left_;
@@ -521,13 +552,11 @@ namespace sl
 
 #define SL_TEST_WITHOUT_PRECISSION(x) {auto t = SL_TEST_BUILD_EXPR(x); auto res = t.validate(); if(!std::get<0>(res)){\
                                                 message_error::instance().add_file(__FILE__); message_error::instance().add_line(__LINE__); message_error::instance().add_operation(#x);\
-                                                std::string report = t.report(); const auto& res_message = std::get<1>(res); \
-                                                if (res_message.empty()){message_error::instance().add_message(std::move(report));}else{message_error::instance().add_message(report + ": " + std::get<1>(res));} message_error::instance().print_last();}}
+                                                auto& res_message = std::get<1>(res); message_error::instance().add_message(std::move(res_message)); message_error::instance().print_last();}}
 
 #define SL_TEST_WITH_PRECISSION(x, y) {auto old_precision = sl::test::tolerance(); sl::test::tolerance() = y; auto t = SL_TEST_BUILD_EXPR(x); auto res = t.validate(); if(!std::get<0>(res)){\
                                                 message_error::instance().add_file(__FILE__); message_error::instance().add_line(__LINE__); message_error::instance().add_operation(#x);\
-                                                std::string report = t.report(); const auto& res_message = std::get<1>(res); \
-                                                if (res_message.empty()){message_error::instance().add_message(std::move(report));}else{message_error::instance().add_message(report + ": " + std::get<1>(res));} message_error::instance().print_last();}sl::test::tolerance() = old_precision; }
+                                                auto& res_message = std::get<1>(res); message_error::instance().add_message(std::move(res_message)); message_error::instance().print_last();}sl::test::tolerance() = old_precision;}
 
 #define SL_INVOKE_BY_NUMBER_ARGS(N, F1, F2, ...) SL_IIF(SL_EQUAL(SL_NARG(__VA_ARGS__), N))(F1, F2)(__VA_ARGS__)
 

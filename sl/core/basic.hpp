@@ -1,5 +1,6 @@
 #pragma once
 
+#include <type_traits>
 #include <sl/patterns/singleton.hpp>
 
 namespace sl
@@ -29,161 +30,267 @@ namespace sl
             constexpr static unsigned int version = 0;
         };
 
-        template<typename IN, typename OUT, typename A>
-        struct builder_base
+        template<typename T>
+        struct ptr_wrapper
         {
-            virtual ~builder_base() = default;
-            builder_base() = default;
+            using type = typename T::element_type;
+            static type* get(const T& obj)
+            {
+                return obj.get();
+            }
 
-            virtual bool test(const A *a) const = 0;
-            virtual void build(int version, IN &in, A *&output) = 0;
-            virtual void build(int version, IN &in, std::unique_ptr<A> &output) = 0;
-            virtual void build(int version, IN &in, std::shared_ptr<A> &output) = 0;
-            virtual void build(IN &in, A *&) const = 0;
-            virtual void build(IN &in, std::unique_ptr<A> &output) = 0;
-            virtual void build(IN &in, std::shared_ptr<A> &output) = 0;
-            virtual void save(A *a, OUT &out) const = 0;
-            virtual const char *getClassName() const = 0;
-            virtual size_t getVersion() const = 0;
+            template<typename U>
+            static void create(T& obj)
+            {
+                obj = T(new type);
+            }
         };
 
-        template<typename IN, typename OUT, typename A, typename B>
-        struct builder_derivated : builder_base<IN, OUT, A>
+        template<typename T>
+        struct ptr_wrapper<T*>
         {
-            using base = std::decay_t<A>;
-            using derived = std::decay_t<B>;
 
-            virtual ~builder_derivated() = default;
-            builder_derivated() = default;
-
-            template<typename B>
-            size_t get_type(const std::shared_ptr<B> &b)
+            using type = T;
+            static type* get(T* obj)
             {
-                return get_type(b.get());
+                return obj;
             }
 
-            template<typename B>
-            size_t get_type(const std::unique_ptr<B> &b)
+            template<typename U>
+            static void create(U& obj)
             {
-                return get_type(b.get());
+                obj = new type;
+            }
+        };
+
+        template<typename T>
+        struct ptr_wrapper<std::shared_ptr<T>>
+        {
+            using type = T;
+            static type* get(const std::shared_ptr<T>& obj)
+            {
+                return obj.get();
             }
 
-            template<typename B>
-            size_t get_type(B *b)
+            template<typename U>
+            static void create(U& obj)
             {
-                size_t i = 0;
-                for(const auto &v : builders_)
+                obj = std::make_shared<type>();
+            }
+        };
+
+        template<typename A>
+        struct ptr_array
+        {
+
+            template<typename SIZE, typename T>
+            static void create(SIZE size, T*& obj)
+            {
+                obj = A::template allocate<T>(size);
+            }
+        };
+
+        template<typename A>
+        struct builder;
+
+        namespace impl
+        {
+            template<typename A>
+            struct base_class
+            {
+                virtual ~base_class() = default;
+                base_class() = default;
+                virtual bool test(const A*) const = 0;
+                virtual bool test(const std::string &) const = 0;
+                virtual const std::string &name(const A*) const = 0;
+                virtual unsigned int version(const A*) const = 0;
+                virtual void save(const A* a, json_oarchive &out) const = 0;
+                virtual bool build(const std::string& name, int version, json_iarchive& in, A*&ptr) = 0;
+            };
+
+            template<typename A, typename B>
+            struct derived_class : public base_class<A>
+            {
+                virtual ~derived_class() = default;
+                derived_class() = default;
+
+                bool test(const A *a) const final
                 {
-                    if(v->test(b))
+                    const B* b = dynamic_cast<const B*>(a);
+                    if (b)
                     {
-                        return i;
+                        return true;
                     }
-                    i++;
+                    return false;
                 }
-                // The link between the base and the derived class don't exist
-                throw std::bad_cast();
-            }
 
-            template<typename B>
-            void add(B *b)
-            {
-                bool is_found = false;
-                for(const auto &v : builders_)
+                bool test(const std::string &name) const final
                 {
-                    if(v->test(b))
+                    return sl::patterns::singleton<sl::detail::builder<B>>::instance().test(name);
+                }
+
+                const std::string &name(const A* a) const final
+                {
+                    if constexpr (std::is_polymorphic_v<B>)
                     {
-                        is_found = true;
-                        break;
+                        return sl::patterns::singleton<sl::detail::builder<B>>::instance().name(static_cast<const B *>(a));
                     }
+                    return std::string(class_data<B>::name);
                 }
-                if(!is_found)
+
+                unsigned int version(const A* a) const final
                 {
-                    builders_.emplace_back(new builder_derivated<IN, OUT, A, B>());
+                    if constexpr (std::is_polymorphic_v<B>)
+                    {
+                        return sl::patterns::singleton<sl::detail::builder<B>>::instance().version(static_cast<const B*>(a));
+                    }
+                    return class_data<B>::version;
                 }
+
+                void save(const A* a, json_oarchive& out) const final
+                {
+                    if constexpr (std::is_polymorphic_v<B>)
+                    {
+                        return sl::patterns::singleton<sl::detail::builder<B>>::instance().save(static_cast<const B*>(a), out);
+                    }
+                    helper<B>::serialize(out, *a);
+                }
+
+                bool build(const std::string& name, int version, json_iarchive& in, A *&a)
+                {
+                    if constexpr (std::is_polymorphic_v<B>)
+                    {
+                        if (sl::patterns::singleton<sl::detail::builder<B>>::instance().test(name))
+                        {
+                            B* b = nullptr;
+                            sl::patterns::singleton<sl::detail::builder<B>>::instance().build(name, version, in, b);
+                            a = b;
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+
+            };
+        }
+
+        template<typename A>
+        struct builder
+        {
+
+            virtual ~builder() = default;
+            builder()
+            {
+                name_ = class_data<A>::name;
             }
 
-            template<typename T>
-            void build(size_t i, IN &in, T &ptr)
+            template<typename C>
+            void add(const C* c)
             {
-                if(i < builders_.size())
+                std::string name(class_data<C>::name);
+                if constexpr (std::is_same_v<A, C>)
                 {
-                    return builders_[i]->build(in, ptr);
-                }
-                throw std::bad_alloc();
-            }
-
-            template<typename T>
-            void build(const std::string &name, int version, IN &in, T &ptr)
-            {
-                auto it = position_.find(name);
-                if(it != position_.end())
-                {
-                    return builders_[it->second]->build(version, in, ptr);
+                    if (base_ == nullptr)
+                    {
+                        base_ = new impl::derived_class<A, C>();
+                    }
                 }
                 else
                 {
-                    size_t i = 0;
-                    for(const auto &v : builders_)
+                    auto it = position_.find(name);
+                    if (it == position_.end())
                     {
-                        const char * base_name = v->getClassName();
-                        if(!strcmp(base_name, name.c_str()))
-                        {
-                            position_.emplace(std::make_pair(name, i));
-                            return v->build(version, in, ptr);
-                        }
-                        i++;
+                        position_.emplace(std::move(name), builders_.size());
+                        builders_.emplace_back(new impl::derived_class<A, C>());
                     }
                 }
-                throw std::bad_alloc();
             }
 
-            void save(size_t i, A *&t, OUT &out)
+            const std::string &name(const A* c) const
             {
-                if(i < builders_.size())
+                for (const auto& v : builders_)
                 {
-                    return builders_[i]->save(t, out);
+                    if (v->test(c))
+                    {
+                        return v->name(c);
+                    }
                 }
-                throw std::bad_cast();
+                return name_;
             }
 
-            const char * getClassName(size_t i) const
+            bool test(const std::string& name)
             {
-                if(i < builders_.size())
+                bool res = name_ == name;
+                for (const auto& v : builders_)
                 {
-                    return builders_[i]->getClassName();
+                    res |= v->test(name);
                 }
-                throw std::bad_cast();
+                return res;
             }
 
-            size_t getVersion(size_t i) const
+            unsigned int version(const A* c) const
             {
-                if(i < builders_.size())
+                for (const auto& v : builders_)
                 {
-                    return builders_[i]->getVersion();
+                    if (v->test(c))
+                    {
+                        return v->version(c);
+                    }
                 }
-                throw std::bad_cast();
+                return class_data<A>::version;
             }
 
-        protected:
+            template<typename OUT>
+            void save(const A* a, OUT& out) const
+            {
+                for (const auto& v : builders_)
+                {
+                    if (v->test(a))
+                    {
+                        return v->save(a, out);
+                    }
+                }
+                access::serialize(out, *a, class_data<A>::version);
+            }
 
-            std::vector<builder_base<IN, OUT, A> *> builders_;
+            template<typename IN, typename T>
+            void build(const std::string& name, int version, IN& in, T *&ptr)
+            {
+                if (name == name_)
+                {
+                    ptr_wrapper<T *>::create(ptr);
+                    return access::deserialize(in, *ptr, version);
+                }
+                for (const auto& v : builders_)
+                {
+                    if (v->build(name, version, in, ptr))
+                    {
+                        return;
+                    }
+                }
+                throw std::bad_typeid();
+            }
+
+            impl::base_class<A>* base_ = nullptr;
+            std::vector<impl::base_class<A> *> builders_;
             std::unordered_map<std::string, size_t> position_;
 
+            std::string name_;
         };
 
-        template<typename IN, typename OUT, typename T, typename U>
+        template<typename T, typename U>
         void link_derived(const T *t = nullptr, const U *u = nullptr)
         {
-            sl::patterns::singleton<detail::builder_derivated<IN, OUT, T, U>>::instance().add(u);
+            sl::patterns::singleton<detail::builder<T>>::instance().add(u);
         }
 
-        template<typename IN, typename OUT, typename T, typename std::enable_if_t<!std::is_abstract<T>::value, int> = 0>
+        template<typename T, typename std::enable_if_t<!std::is_abstract<T>::value, int> = 0>
         void link_derived(const T *t = nullptr)
         {
-            sl::patterns::singleton<detail::builder_derivated<IN, OUT, T, T>>::instance().add(t);
+            sl::patterns::singleton<detail::builder<T>>::instance().add(t);
         }
 
-        template<typename IN, typename OUT, typename T, typename std::enable_if_t<std::is_abstract<T>::value, int> = 0>
+        template<typename T, typename std::enable_if_t<std::is_abstract<T>::value, int> = 0>
         void link_derived(const T *t = nullptr)
         {
         }
@@ -228,66 +335,6 @@ namespace sl
             constexpr static bool optional_{false};
         };
 
-        template<typename T>
-        struct ptr_wrapper
-        {
-            using type = typename T::element_type;
-            static type *get(const T &obj)
-            {
-                return obj.get();
-            }
-
-            template<typename U>
-            static void create(T &obj)
-            {
-                obj = T(new type);
-            }
-        };
-
-        template<typename T>
-        struct ptr_wrapper<T *>
-        {
-
-            using type = T;
-            static type *get(T *obj)
-            {
-                return obj;
-            }
-
-            template<typename U>
-            static void create(T &obj)
-            {
-                obj = new type;
-            }
-        };
-
-        template<typename T>
-        struct ptr_wrapper<std::shared_ptr<T>>
-        {
-            using type = T;
-            static type *get(const std::shared_ptr<T> &obj)
-            {
-                return obj.get();
-            }
-
-            template<typename U>
-            static void create(T &obj)
-            {
-                obj = std::make_shared<type>();
-            } 
-        };
-
-        template<typename A>
-        struct ptr_array
-        {
-
-            template<typename SIZE, typename T>
-            static void create(SIZE size, T *&obj)
-            {
-                obj = A::template allocate<T>(size);
-            }
-        };
-
     } // namespace detail
     
     template<typename T, typename U>
@@ -324,12 +371,6 @@ namespace sl
     constexpr auto optional_basic_property(T C::*member, const char *name)
     {
         return detail::basic_property<C, T, true>(member, name);
-    }
-
-    template<typename T, typename U>
-    constexpr auto ptr_array(T &&t, U &&u)
-    {
-        return detail::ptr_array<T, U>(std::forward<T>(t), std::forward<U>(u));
     }
 
     template<typename C, typename T, typename U>

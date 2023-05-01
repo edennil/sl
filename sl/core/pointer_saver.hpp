@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <memory>
+#include <exception>
 
 namespace sl
 {
@@ -32,7 +33,7 @@ namespace sl
             {
                 auto memory = static_cast<void *>(ptr);
                 auto it = pointers_.find(memory);
-                if(it != pointers_.end())
+                if(it == pointers_.end())
                 {
                     auto size = positions_.size();
                     positions_.emplace_back(memory);
@@ -47,7 +48,7 @@ namespace sl
             {
                 auto memory = static_cast<void *>(ptr.get());
                 auto it = pointers_.find(memory);
-                if(it != pointers_.end())
+                if(it == pointers_.end())
                 {
                     auto size = positions_.size();
                     positions_.emplace_back(memory);
@@ -62,7 +63,7 @@ namespace sl
             {
                 auto memory = static_cast<void *>(ptr.get());
                 auto it = pointers_.find(memory);
-                if(it != pointers_.end())
+                if(it == pointers_.end())
                 {
                     auto size = positions_.size();
                     positions_.emplace_back(memory);
@@ -124,7 +125,7 @@ namespace sl
             {
                 auto memory = static_cast<void *>(ptr);
                 auto it = pointers_.find(memory);
-                if(it != pointers_.end())
+                if(it == pointers_.end())
                 {
                     pointers_.emplace(memory, positions_.size());
                     positions_.emplace_back(memory, nullptr);
@@ -138,7 +139,7 @@ namespace sl
             {
                 auto memory = static_cast<void *>(ptr.get());
                 auto it = pointers_.find(memory);
-                if(it != pointers_.end())
+                if(it == pointers_.end())
                 {
                     pointers_.emplace(memory, positions_.size());
                     positions_.emplace_back(memory, std::static_pointer_cast<void>(ptr));
@@ -152,7 +153,7 @@ namespace sl
             {
                 auto memory = static_cast<void *>(ptr.get());
                 auto it = pointers_.find(memory);
-                if(it != pointers_.end())
+                if(it == pointers_.end())
                 {
                     pointers_.emplace(memory, positions_.size());
                     unique_ptr_.emplace(positions_.size());
@@ -167,7 +168,7 @@ namespace sl
             {
                 auto memory = static_cast<void *>(ptr);
                 auto it = pointers_.find(memory);
-                if(it != pointers_.end())
+                if(it == pointers_.end())
                 {
                     if(position + 1 > positions_.size())
                     {
@@ -177,7 +178,7 @@ namespace sl
                     pointers_.emplace(memory, position);
                     return -1;
                 }
-                return std::exception();
+                throw std::exception();
             }
 
             template<typename T>
@@ -185,7 +186,7 @@ namespace sl
             {
                 auto memory = static_cast<void *>(ptr.get());
                 auto it = pointers_.find(memory);
-                if(it != pointers_.end())
+                if(it == pointers_.end())
                 {
                     if(position + 1 > positions_.size())
                     {
@@ -195,7 +196,7 @@ namespace sl
                     pointers_.emplace(memory, position);
                     return -1;
                 }
-                return std::exception();
+                throw std::exception();
             }
 
             template<typename T>
@@ -203,7 +204,7 @@ namespace sl
             {
                 auto memory = static_cast<void *>(ptr.get());
                 auto it = pointers_.find(memory);
-                if(it != pointers_.end())
+                if(it == pointers_.end())
                 {
                     if(position + 1 > positions_.size())
                     {
@@ -214,7 +215,7 @@ namespace sl
                     pointers_.emplace(memory, position);
                     return -1;
                 }
-                return std::exception();
+                throw std::exception();
             }
 
             template<typename T>
@@ -240,7 +241,7 @@ namespace sl
                         auto it = unique_ptr_.find(i);
                         if(it != unique_ptr_.end())
                         {
-                            throw std::exception("This pointer is used as a unique_ptr");
+                            throw std::runtime_error("This pointer is used as a unique_ptr");
                         }
                         auto tmp = std::shared_ptr<T>(static_cast<T *>(positions_[i].first));
                         positions_[i].second = std::static_pointer_cast<void>(tmp);
@@ -263,14 +264,14 @@ namespace sl
                     {
                         if(positions_[i].second)
                         {
-                            throw std::exception("We can't create a unique_ptr using a shared_ptr");
+                            throw std::runtime_error("We can't create a unique_ptr using a shared_ptr");
                         }
                         obj = std::make_unique<T>(static_cast<T *>(positions_[i].first));
                         unique_ptr_.emplace(i);
                     }
                     else
                     {
-                        throw std::exception("Only one unique_ptr");
+                        throw std::runtime_error("only one unique_ptr");
                     }
                 }
             }

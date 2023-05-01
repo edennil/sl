@@ -360,11 +360,6 @@ namespace sl
                 return std::make_tuple(false, std::string("incorrect size"));
             }
 
-            static std::string report(const Left& left, const Right& right)
-            {
-                return std::string();
-            }
-
             static std::tuple<bool, std::string> apply(const Left& left, const Right& right, std::stack<std::string>& path)
             {
                 if (left.size() == right.size())
@@ -509,11 +504,6 @@ namespace sl
                 return std::make_tuple(static_cast<bool>(value_), std::string());
             }
 
-            std::string report() const
-            {
-                return "";
-            }
-
             T value_;
         };
 
@@ -532,11 +522,6 @@ namespace sl
             std::tuple<bool, std::string> validate() const
             {
                 return operations<left, right, op>::apply(left_.value_, right_);
-            }
-
-            std::string report() const
-            {
-                return std::string();
             }
 
             Left left_;
@@ -567,13 +552,11 @@ namespace sl
 
 #define SL_TEST_WITHOUT_PRECISSION(x) {auto t = SL_TEST_BUILD_EXPR(x); auto res = t.validate(); if(!std::get<0>(res)){\
                                                 message_error::instance().add_file(__FILE__); message_error::instance().add_line(__LINE__); message_error::instance().add_operation(#x);\
-                                                std::string report = t.report(); const auto& res_message = std::get<1>(res); \
-                                                if (res_message.empty()){message_error::instance().add_message(std::move(report));}else{message_error::instance().add_message(report + ": " + std::get<1>(res));} message_error::instance().print_last();}}
+                                                auto& res_message = std::get<1>(res); message_error::instance().add_message(std::move(res_message)); message_error::instance().print_last();}}
 
 #define SL_TEST_WITH_PRECISSION(x, y) {auto old_precision = sl::test::tolerance(); sl::test::tolerance() = y; auto t = SL_TEST_BUILD_EXPR(x); auto res = t.validate(); if(!std::get<0>(res)){\
                                                 message_error::instance().add_file(__FILE__); message_error::instance().add_line(__LINE__); message_error::instance().add_operation(#x);\
-                                                std::string report = t.report(); const auto& res_message = std::get<1>(res); \
-                                                if (res_message.empty()){message_error::instance().add_message(std::move(report));}else{message_error::instance().add_message(report + ": " + std::get<1>(res));} message_error::instance().print_last();}sl::test::tolerance() = old_precision; }
+                                                auto& res_message = std::get<1>(res); message_error::instance().add_message(std::move(res_message)); message_error::instance().print_last();}sl::test::tolerance() = old_precision;}
 
 #define SL_INVOKE_BY_NUMBER_ARGS(N, F1, F2, ...) SL_IIF(SL_EQUAL(SL_NARG(__VA_ARGS__), N))(F1, F2)(__VA_ARGS__)
 

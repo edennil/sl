@@ -1,4 +1,5 @@
 #include <sstream>
+#include <optional>
 #include "test_env.hpp"
 #include "framework/helper.hpp"
 #include <sl/core/macros.hpp>
@@ -72,6 +73,7 @@ public:
         SL_TEST(std_unordered_map_ == ref.std_unordered_map_);
         SL_TEST(std_unordered_multimap_ == ref.std_unordered_multimap_);
         SL_TEST(std_tuple_ == ref.std_tuple_);
+        SL_TEST(std_optional_value_ == ref.std_optional_value_);
         return true;
     }
 
@@ -81,6 +83,7 @@ public:
     std::unordered_map<std::string, double>& std_unordered_map() { return std_unordered_map_; }
     std::unordered_multimap<int, double>& std_unordered_multimap() { return std_unordered_multimap_; }
     std::tuple<std::string, double, int>& std_tuple() { return std_tuple_; }
+    std::optional<double>& std_optional_value() { return std_optional_value_; }
 
 protected:
 
@@ -92,13 +95,15 @@ protected:
     std::unordered_map<std::string, double> std_unordered_map_;
     std::unordered_multimap<int, double> std_unordered_multimap_;
     std::tuple<std::string, double, int> std_tuple_;
+    std::optional<double> std_optional_value_;
 
     SL_PROPERTIES(  SL_PROPERTY(object_with_std_elements::std_string_, "std_string"),
                     SL_PROPERTY(object_with_std_elements::std_vector_, "std_vector"),
                     SL_PROPERTY(object_with_std_elements::std_map_, "std_map"),
                     SL_PROPERTY(object_with_std_elements::std_unordered_map_, "std_unordered_map"),
                     SL_PROPERTY(object_with_std_elements::std_unordered_multimap_, "std_unordered_multimap"),
-                    SL_PROPERTY(object_with_std_elements::std_tuple_, "std_tuple"));
+                    SL_PROPERTY(object_with_std_elements::std_tuple_, "std_tuple"),
+                    SL_PROPERTY(object_with_std_elements::std_optional_value_, "std_optional_value"));
 
 };
 
@@ -153,6 +158,7 @@ SL_ADD_TEST_CASE(test_object_with_std_elements)
         ref.std_unordered_multimap() = std::move(ummap);
     }
     ref.std_tuple() = std::make_tuple(std::string("bye"), 3.1415, 1);
+    ref.std_optional_value() = 1.;
     test<object_with_std_elements, sl::json_iarchive, sl::json_oarchive>::apply(ref);
 }
 

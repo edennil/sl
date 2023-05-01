@@ -434,6 +434,22 @@ namespace sl
             }
         };
 
+        template<typename T>
+        struct helper<std::optional<T>>
+        {
+            template<typename Archive>
+            static void serialize(Archive& out, const std::optional<T>& obj)
+            {
+                explicit_helper<Archive, std::optional<T>>::serialize(out, obj);
+            }
+
+            template<typename Archive>
+            static void deserialize(Archive& in, std::optional<T>& obj)
+            {
+                explicit_helper<Archive, std::optional<T>>::deserialize(in, obj);
+            }
+        };
+
         template<typename A>
         struct helper<std::shared_ptr<A>>
         {

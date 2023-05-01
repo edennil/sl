@@ -788,6 +788,36 @@ namespace sl
             }
         };
 
+        template<typename A>
+        struct explicit_helper<json_oarchive, std::optional<A>>
+        {
+            static void serialize(json_oarchive& out, const std::optional<A>& obj)
+            {
+                if (obj.has_value())
+                {
+                    detail::helper<A>::serialize(out, obj.value());
+                }
+                else
+                {
+                    out.get() << "null";
+                }
+            }
+        };
+
+        template<typename A>
+        struct explicit_helper<json_iarchive, std::optional<A>>
+        {
+            static void deserialize(json_iarchive& in, std::optional<A>& obj)
+            {
+                if (!in.compare("null", 4))
+                {
+                    A a;
+                    detail::helper<A>::deserialize(in, a);
+                    obj = std::move(a);
+                }
+            }
+        };
+
         template<typename Ar, bool>
         struct explicit_is_simple_enum;
 

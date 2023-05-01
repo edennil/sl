@@ -8,6 +8,7 @@
 #include <set>
 #include <map>
 #include <stack>
+#include <optional>
 
 #include <sl/macros/IIF.h>
 #include <sl/macros/NARG.h>
@@ -41,6 +42,7 @@ namespace sl
                 constexpr static bool is_container = false;
                 constexpr static bool is_key_container = false;
                 constexpr static bool is_tuple = false;
+                constexpr static bool is_optional = false;
             };
 
             template<typename T>
@@ -120,6 +122,12 @@ namespace sl
                 constexpr static bool is_tuple = true;
             };
 
+            template<typename T>
+            struct traits<std::optional<T>> : public traits_base
+            {
+                constexpr static bool is_optional = true;
+            };
+
             template<typename Left, typename Right>
             struct traits_double
             {
@@ -133,6 +141,7 @@ namespace sl
                 constexpr static bool is_container = traits_left::is_container && traits_right::is_container;
                 constexpr static bool is_key_container = traits_left::is_key_container && traits_right::is_key_container;
                 constexpr static bool is_tuple = traits_left::is_tuple && traits_right::is_tuple;
+                constexpr static bool is_optional = traits_left::is_optional && traits_right::is_optional;
             };
 
         } // namespace detail
@@ -196,6 +205,7 @@ namespace sl
         template<typename Left, typename Right, operation op>
         struct operations<Left, Right, op, std::enable_if_t<traits_double<Left, Right>::is_arithmetic || traits_double<Left, Right>::is_string || traits_double<Left, Right>::is_boolean>>
         {
+
             static std::tuple<bool, std::string> apply(const Left &left, const Right &right)
             {
                 if (tolerance() == 0.)
@@ -210,13 +220,6 @@ namespace sl
                     return std::make_tuple(res, std::string());
                 }
                 return compare_with_tolerance(left, right);
-            }
-
-            static std::string report(const Left &left, const Right &right)
-            {
-                std::stringstream out;
-                out << '[' << left << calculus<op>::inverse() << right << ']';
-                return out.str();
             }
 
         };
@@ -472,6 +475,28 @@ namespace sl
                 }
                 return std::make_tuple(false, std::string("incorrect size"));
             }
+        };
+
+        template<typename Left, typename Right, operation op>
+        struct operations<Left, Right, op, std::enable_if_t<traits_double<Left, Right>::is_optional>>
+        {
+            static std::tuple<bool, std::string> apply(const Left& left, const Right& right)
+            {
+
+                using left_type = typename Left::value_type;
+                using right_type = typename Right::value_type;
+
+                if (left.has_value() && left.has_value())
+                {
+                    return operations<left_type, right_type, op>::apply(left.value(), right.value());
+                }
+                else if (!left.has_value() && left.has_value() || left.has_value() && !left.has_value())
+                {
+                    return std::make_tuple(false, std::string("both need to be in the same state"));
+                }
+                return std::make_tuple(true, std::string());
+            }
+
         };
 
         template<typename T>

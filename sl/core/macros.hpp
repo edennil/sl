@@ -25,13 +25,21 @@
 
 #define SL_SERIALIZABLE friend class sl::access
 
+#define SL_SERIALIZE_PROPERTY(A) std::make_tuple(std::make_tuple(A, this), false) 
+
+#define SL_SERIALIZE_LAST_PROPERTY(A) std::make_tuple(A, this)
+
+#define SL_TO_SERIALIZE(A) std::make_tuple(A, this, false)
+
+#define SL_TO_SERIALIZE_LAST(A) std::make_tuple(A, this, true)
+
 #define SL_SERIALIZE_CLASS(A) namespace sl{namespace detail{\
                                     template<> struct class_data<A>{\
                                     static constexpr unsigned int version = 0;\
                                     static constexpr char name[] = #A;\
                                     static constexpr size_t size = dim(name) - 1;};}}
 
-#define SL_SERIALIZE_CLASS_VERSION_AND_NAME(A, version_value, NAME) namespace sl{amespace detail{\
+#define SL_SERIALIZE_CLASS_VERSION_AND_NAME(A, version_value, NAME) namespace sl{namespace detail{\
                                                     template<> struct class_data<A>{\
                                                     static constexpr unsigned int version = version_value;\
                                                     static constexpr char name[] = NAME;\

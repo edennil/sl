@@ -1,5 +1,9 @@
 #pragma once
 
+#include <map>
+#include <vector>
+#include <optional>
+
 #include "basic.hpp"
 
 namespace information
@@ -37,7 +41,7 @@ namespace sl
 
         template<int version, typename Archive> struct explicit_with_version;
         template<bool option, typename T> struct is_simple;
-        template<int version, typename Archive> struct explicit_without_serialize_with_version;
+        template<int version> struct explicit_without_serialize_with_version;
         template<typename Archive, typename T> struct explicit_is_simple;
         template<typename Archive, typename T> struct explicit_helper;
         template<bool option> struct with_serialize;
@@ -85,13 +89,13 @@ namespace sl
             template<typename Archive, typename T>
             static void serialize(Archive &out, const T &obj)
             {
-                explicit_without_serialize_with_version<version, Archive>::serialize(out, obj);
+                explicit_without_serialize_with_version<version>::serialize(out, obj);
             }
 
             template<typename Archive, typename T>
             static void deserialize(Archive &in, T &obj)
             {
-                explicit_without_serialize_with_version<version, Archive>::deserialize(in, obj);
+                explicit_without_serialize_with_version<version>::deserialize(in, obj);
             }
 
         };
@@ -106,12 +110,13 @@ namespace sl
             }
 
             template<typename Archive, typename T>
-            static void deserialize(Archive &in, T &obj)
+            static void deserialize(Archive& in, T& obj)
             {
                 explicit_with_version<0, Archive>::deserialize(in, obj);
             }
 
         };
+
 
         template<typename T>
         struct is_simple<true, T>
@@ -170,6 +175,7 @@ namespace sl
             {
                 without_serialize_with_version<sl::detail::class_data<T>::version>::deserialize(in, obj);
             }
+
         };
 
         template<>
@@ -202,27 +208,10 @@ namespace sl
             }
 
             template<typename Archive, typename U>
-            static void deserialize(Archive& in, U& obj)
+            static void deserialize(Archive& in, U&& obj)
             {
-                is_simple<std::is_fundamental<U>::value || std::is_enum_v<U>, U>::deserialize(in, obj);
-            }
-        };
-
-        template<typename T, typename U, bool O>
-        struct helper<std::tuple<sl::detail::basic_property<T, U, O>, const char *, bool>>
-        {
-            using type = std::tuple<sl::detail::basic_property<T, U, O>, const char *, bool>;
-
-            template<typename Archive>
-            static void serialize(Archive &out, const type &obj)
-            {
-                explicit_helper<Archive, type>::serialize(out, obj);
-            }
-
-            template<typename Archive>
-            static void deserialize(Archive& in, type&& obj)
-            {
-                explicit_helper<Archive, type>::deserialize(in, std::move(obj));
+                using type = std::decay_t<U>;
+                is_simple<std::is_fundamental<type>::value || std::is_enum_v<type>, type>::deserialize(in, std::forward<U>(obj));
             }
         };
 
@@ -382,10 +371,10 @@ namespace sl
                 explicit_helper<Archive, std::tuple<A...>>::serialize(out, obj);
             }
 
-            template<typename Archive>
-            static void deserialize(Archive &out, std::tuple<A...> &obj)
+            template<typename Archive, typename U>
+            static void deserialize(Archive &out, U &&obj)
             {
-                explicit_helper<Archive, std::tuple<A...>>::deserialize(out, obj);
+                explicit_helper<Archive, std::tuple<A...>>::deserialize(out, std::forward<U>(obj));
             }
         };
 

@@ -1,13 +1,15 @@
 #include <sstream>
-#include <optional>
-#include "test_env.hpp"
-#include "framework/helper.hpp"
+
 #include <sl/core/macros.hpp>
 #include <sl/core/to_value.hpp>
 #include <sl/core/io_interface.hpp>
 #include <sl/core/json_serializer.hpp>
 #include <sl/core/helper.hpp>
 #include <sl/core/json/helper.hpp>
+
+#include "test_env.hpp"
+#include "framework/helper.hpp"
+#include "serialize_common.hpp"
 
 
 class object_with_simple_elements
@@ -109,19 +111,6 @@ protected:
 
 SL_TEST_GROUP(simple_tests)
 
-template<typename T, typename IN, typename OUT>
-struct test
-{
-    static void apply(const T &original)
-    {
-        T copy;
-        std::stringstream stream;
-        sl::save<std::stringstream, OUT, T>(stream, original);
-        sl::load<std::stringstream, IN, T>(stream, copy);
-        original == copy;
-    }
-};
-
 SL_ADD_TEST_CASE(test_object_with_simple_elements)
 {
     object_with_simple_elements ref;
@@ -132,7 +121,7 @@ SL_ADD_TEST_CASE(test_object_with_simple_elements)
     ref.float_number() = 5.f;
     ref.size_t_number() = 6;
     ref.bool_value() = true;
-    test<object_with_simple_elements, sl::json_iarchive, sl::json_oarchive>::apply(ref);
+    sl::test::serialize_common<object_with_simple_elements, sl::json_iarchive, sl::json_oarchive>::apply(ref);
 }
 
 SL_ADD_TEST_CASE(test_object_with_std_elements)
@@ -159,7 +148,7 @@ SL_ADD_TEST_CASE(test_object_with_std_elements)
     }
     ref.std_tuple() = std::make_tuple(std::string("bye"), 3.1415, 1);
     ref.std_optional_value() = 1.;
-    test<object_with_std_elements, sl::json_iarchive, sl::json_oarchive>::apply(ref);
+    sl::test::serialize_common<object_with_std_elements, sl::json_iarchive, sl::json_oarchive>::apply(ref);
 }
 
 SL_END_TEST_GROUP

@@ -9,7 +9,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(SOURCES src/main.cpp
             tests/test_tools.cpp
             tests/test_environment_test.cpp
-            tests/test_simple_object.cpp)
+            tests/test_simple_object.cpp
+            tests/test_user_functions.cpp)
 
 add_executable(sl_test ${SOURCES})
 
@@ -30,4 +31,8 @@ add_test(NAME "tools_test.test_zip_map" COMMAND sl_test --run=tools_test/test_zi
 add_test(NAME "tools_test.test_zip_vector_map" COMMAND sl_test --run=tools_test/test_zip_vector_map)
 add_test(NAME "simple_tests.test_object_with_simple_elements" COMMAND sl_test --run=simple_tests/test_object_with_simple_elements)
 add_test(NAME "simple_tests.test_object_with_std_elements" COMMAND sl_test --run=simple_tests/test_object_with_std_elements)
-
+add_test(NAME "test_user_functions.test_serialize_function" COMMAND sl_test --run=test_user_functions/test_serialize_function)
+add_test(NAME "test_user_functions.test_deserialize_function" COMMAND sl_test --run=test_user_functions/test_deserialize_function)
+add_test(NAME "test_user_functions.test_serialize_and_deserialize_function" COMMAND sl_test --run=test_user_functions/test_serialize_and_deserialize_function)
+add_test(NAME "test_user_functions.test_with_version_function" COMMAND sl_test --run=test_user_functions/test_with_version_function)
+add_test(NAME "test_user_functions.test_deserialize_with_version_function" COMMAND sl_test --run=test_user_functions/test_deserialize_with_version_function)

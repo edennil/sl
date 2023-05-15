@@ -13,7 +13,7 @@ namespace sl
 
         template<int version, typename Archive> struct explicit_with_version;
         template<bool option, typename T> struct is_simple;
-        template<int version, typename Archive> struct explicit_without_serialize_with_version;
+        template<int version> struct explicit_without_serialize_with_version;
         template<typename Archive, typename T> struct explicit_is_simple;
         template<typename Archive, typename T> struct explicit_helper;
         template<bool option> struct with_serialize;
@@ -325,7 +325,7 @@ namespace sl
                 }
                 auto len = detail::class_data<T>::size;
                 in++;
-                if(in.compare(detail::class_data<T>::name, len))
+                if(!in.compare(detail::class_data<T>::name, len))
                 {
                     throw std::exception();
                 }
@@ -361,7 +361,7 @@ namespace sl
         };
         
         template<int version>
-        struct explicit_witout_serialize_with_version
+        struct explicit_without_serialize_with_version
         {
 
             template<typename T>
@@ -375,6 +375,62 @@ namespace sl
                 explicit_without_name::serialize(out, obj);
                 out.get() << '}';
                 out.get() << '}';
+            }
+
+            template<typename T>
+            static void deserialize(json_iarchive& in, T& obj)
+            {
+                using type = std::decay_t<T>;
+                in++;
+                int local_version(0);
+                if (in.compare("\"version", 8))
+                {
+                    in += 10;
+                    helper<int>::deserialize(in, local_version);
+                    in++;
+                }
+                if (local_version != version)
+                {
+                    throw std::exception();
+                }
+                auto len = detail::class_data<T>::size;
+                in++;
+                if (!in.compare(detail::class_data<T>::name, len))
+                {
+                    throw std::exception();
+                }
+                in += len + 1;
+                in++;
+                in++;
+                constexpr auto properties = access::template get_properties<type>();
+                const auto size = std::tuple_size_v<decltype(properties)>;
+                detail::for_each(std::make_index_sequence<size>{}, [&](auto i)
+                {
+                    auto property = std::get<i>(properties);
+                    in++;
+                    size_t label_size = strlen(property.name_);
+                    if (strncmp(in.c_str(), property.name_, label_size))
+                    {
+                        if (property.optional_)
+                        {
+                            if (i == size - 1)
+                            {
+                                in--;
+                            }
+                            in--;
+                            return;
+                        }
+                        throw std::exception();
+                    }
+                    in += static_cast<int>(label_size + 2);
+                    json::explicit_helper_property<decltype(property)>::deserialize(in, property, obj);
+                    if (i != size - 1)
+                    {
+                        in++;
+                    }
+                    });
+                in++;
+                in++;
             }
         };
 
@@ -397,13 +453,14 @@ namespace sl
         {
 
             template<typename T>
-            static void deserialize(json_iarchive& in, T& obj)
+            static void deserialize(json_iarchive& in, T&& obj)
             {
+                using type = std::decay_t<T>;
                 in++;
                 in++;
-                constexpr auto properties = access::template get_properties<T>();
-                constexpr auto len = detail::class_data<T>::size;
-                if (!in.compare(detail::class_data<T>::name, len))
+                constexpr auto properties = access::template get_properties<type>();
+                constexpr auto len = detail::class_data<type>::size;
+                if (!in.compare(detail::class_data<type>::name, len))
                 {
                     throw std::exception();
                 }
@@ -490,7 +547,8 @@ namespace sl
         {
             using type = std::tuple<detail::basic_property<T, U, O>, T *, bool>;
 
-            static void deserialize(json_iarchive &in, type &all_obj)
+            template<typename S>
+            static void deserialize(json_iarchive &in, S &&all_obj)
             {
                 const auto &property = std::get<0>(all_obj);
                 const auto &obj = std::get<1>(all_obj);

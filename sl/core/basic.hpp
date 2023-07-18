@@ -335,6 +335,14 @@ namespace sl
             constexpr static bool optional_{false};
         };
 
+        template<typename...T>
+        struct local_properties
+        {
+            template<typename...U>
+            local_properties(U&&...u) : data_(std::forward<U>(u)...) {}
+            std::tuple<T...> data_;
+        };
+
     } // namespace detail
     
     template<typename T, typename U>
@@ -388,6 +396,12 @@ namespace sl
             return detail::array_property<C, T, U, A>(member1, member2, name);
         }
     };
+
+    template<typename...T>
+    constexpr auto local_properties(T&&... t)
+    {
+        return detail::local_properties<T...>(std::forward<T>(t)...);
+    }
     
     
 } // namespace sl

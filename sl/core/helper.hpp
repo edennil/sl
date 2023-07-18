@@ -93,9 +93,9 @@ namespace sl
             }
 
             template<typename Archive, typename T>
-            static void deserialize(Archive &in, T &obj)
+            static void deserialize(Archive &in, T &&obj)
             {
-                explicit_without_serialize_with_version<version>::deserialize(in, obj);
+                explicit_without_serialize_with_version<version>::deserialize(in, std::forward<T>(obj));
             }
 
         };
@@ -110,9 +110,9 @@ namespace sl
             }
 
             template<typename Archive, typename T>
-            static void deserialize(Archive& in, T& obj)
+            static void deserialize(Archive& in, T&& obj)
             {
-                explicit_with_version<0, Archive>::deserialize(in, obj);
+                explicit_with_version<0, Archive>::deserialize(in, std::forward<T>(obj));
             }
 
         };
@@ -131,9 +131,9 @@ namespace sl
             }
 
             template<typename Archive, typename U>
-            static void deserialize(Archive &in, U &obj)
+            static void deserialize(Archive &in, U &&obj)
             {
-                explicit_is_simple<Archive, working_type>::deserialize(in, obj);
+                explicit_is_simple<Archive, working_type>::deserialize(in, std::forward<U>(obj));
             }             
 
         };
@@ -151,11 +151,11 @@ namespace sl
             }
 
             template<typename Archive, typename U>
-            static void deserialize(Archive &in, U &obj)
+            static void deserialize(Archive &in, U &&obj)
             {
-                static constexpr bool has_deserialize = sl::access::template has_deserialize<U, void(Archive &, const unsigned int)>::value;
+                static constexpr bool has_deserialize = sl::access::template has_deserialize<std::decay_t<U>, void(Archive &, const unsigned int)>::value;
                 static constexpr bool is_polymorphic = std::is_polymorphic_v<std::decay_t<U>>;
-                with_serialize<is_polymorphic || has_deserialize>::deserialize(in, obj);
+                with_serialize<is_polymorphic || has_deserialize>::deserialize(in, std::forward<U>(obj));
             }
 
         };
@@ -171,9 +171,9 @@ namespace sl
             }
 
             template<typename Archive, typename T>
-            static void deserialize(Archive& in, T& obj)
+            static void deserialize(Archive& in, T&& obj)
             {
-                without_serialize_with_version<sl::detail::class_data<T>::version>::deserialize(in, obj);
+                without_serialize_with_version<sl::detail::class_data<std::decay_t<T>>::version>::deserialize(in, std::forward<T>(obj));
             }
 
         };
@@ -488,6 +488,24 @@ namespace sl
             {
 
             }
+        };
+
+        template<typename...T>
+        struct helper<local_properties<T...>>
+        {
+
+            template<typename Archive>
+            static void serialize(Archive& out, const local_properties<T...>& obj)
+            {
+                explicit_helper<Archive, local_properties<T...>>::serialize(out, obj);
+            }
+
+            template<typename Archive, typename U>
+            static void deserialize(Archive& in, U&& obj)
+            {
+                explicit_helper<Archive, local_properties<T...>>::deserialize(in, std::forward<U>(obj));
+            }
+
         };
         
     } // namespace detail

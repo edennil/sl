@@ -876,6 +876,49 @@ namespace sl
             }
         };
 
+        template<typename...T>
+        struct explicit_helper<json_oarchive, sl::detail::local_properties<T...>>
+        {
+
+            static void serialize(json_oarchive& out, const sl::detail::local_properties<T...>& obj)
+            {
+                constexpr auto size = sizeof...(T);
+                detail::for_each(std::make_index_sequence<size>{}, [&](auto i)
+                {
+                    const auto& property = std::get<i>(obj.data_);
+                    using property_t = std::decay_t<decltype(property)>;
+                    helper<property_t>::serialize(out, property);
+                    if (i != size - 1)
+                    {
+                        out.get() << ',';
+                    }
+                });
+            }
+
+        };
+
+        template<typename...T>
+        struct explicit_helper<json_iarchive, sl::detail::local_properties<T...>>
+        {
+
+            template<typename U>
+            static void deserialize(json_iarchive& in, U&& obj)
+            {
+                constexpr auto size = sizeof...(T);
+                detail::for_each(std::make_index_sequence<size>{}, [&](auto i)
+                {
+                    const auto& property = std::get<i>(obj.data_);
+                    using property_t = std::decay_t<decltype(property)>;
+                    helper<property_t>::deserialize(in, property);
+                    if (i != size - 1)
+                    {
+                        in++;
+                    }
+                });
+            }
+
+        };
+
         template<typename Ar, bool>
         struct explicit_is_simple_enum;
 

@@ -29,9 +29,9 @@
 
 #define SL_SERIALIZE_LAST_PROPERTY(A) std::make_tuple(A, this)
 
-#define SL_TO_SERIALIZE(A) std::make_tuple(A, this, false)
+#define SL_TO_SERIALIZE(A, B) std::make_tuple(sl::basic_property(&A, B), this, true)
 
-#define SL_TO_SERIALIZE_LAST(A) std::make_tuple(A, this, true)
+#define SL_LOCAL_PROPERTIES sl::local_properties
 
 #define SL_SERIALIZE_CLASS(A) namespace sl{namespace detail{\
                                     template<> struct class_data<A>{\

@@ -40,7 +40,7 @@ protected:
     template<typename Ar>
     void serialize(Ar& ar, const unsigned int version) const
     {
-        ar& SL_TO_SERIALIZE(SL_PROPERTY(object_with_serialize::y_, "y")) & SL_TO_SERIALIZE_LAST(SL_PROPERTY(object_with_serialize::x_, "x"));
+        ar& SL_LOCAL_PROPERTIES(SL_TO_SERIALIZE(object_with_serialize::y_, "y"), SL_TO_SERIALIZE(object_with_serialize::x_, "x"));
     }
 
     double y_ = 0.;
@@ -76,7 +76,7 @@ protected:
     template<typename Ar>
     void deserialize(Ar& ar, const unsigned int version)
     {
-        ar& SL_TO_SERIALIZE(SL_PROPERTY(object_with_deserialize::y_, "y"))& SL_TO_SERIALIZE_LAST(SL_PROPERTY(object_with_deserialize::x_, "x"));
+        ar& SL_LOCAL_PROPERTIES(SL_TO_SERIALIZE(object_with_deserialize::y_, "y"), SL_TO_SERIALIZE(object_with_deserialize::x_, "x"));
     }
 
     double y_ = 0.;
@@ -112,13 +112,13 @@ protected:
     template<typename Ar>
     void serialize(Ar& ar, const unsigned int version) const
     {
-        ar& SL_TO_SERIALIZE(SL_PROPERTY(object_with_serialize_deserialize::y_, "y"))& SL_TO_SERIALIZE_LAST(SL_PROPERTY(object_with_serialize_deserialize::x_, "x"));
+        ar& SL_LOCAL_PROPERTIES(SL_TO_SERIALIZE(object_with_serialize_deserialize::y_, "y"), SL_TO_SERIALIZE(object_with_serialize_deserialize::x_, "x"));
     }
 
     template<typename Ar>
     void deserialize(Ar& ar, const unsigned int version)
     {
-        ar& SL_TO_SERIALIZE(SL_PROPERTY(object_with_serialize_deserialize::y_, "y"))& SL_TO_SERIALIZE_LAST(SL_PROPERTY(object_with_serialize_deserialize::x_, "x"));
+        ar& SL_LOCAL_PROPERTIES(SL_TO_SERIALIZE(object_with_serialize_deserialize::y_, "y"), SL_TO_SERIALIZE(object_with_serialize_deserialize::x_, "x"));
     }
 
     double y_ = 0.;
@@ -186,12 +186,12 @@ protected:
         {
             case 1:
             {
-                ar& SL_TO_SERIALIZE_LAST(SL_PROPERTY(object_deserialize_with_version::x_, "x"));
+                ar& SL_LOCAL_PROPERTIES(SL_TO_SERIALIZE(object_deserialize_with_version::x_, "x"));
                 break;
             }
             case 2:
             {
-                ar& SL_TO_SERIALIZE(SL_PROPERTY(object_deserialize_with_version::y_, "y"))& SL_TO_SERIALIZE_LAST(SL_PROPERTY(object_deserialize_with_version::x_, "x"));
+                ar& SL_LOCAL_PROPERTIES(SL_TO_SERIALIZE(object_deserialize_with_version::y_, "y"), SL_TO_SERIALIZE(object_deserialize_with_version::x_, "x"));
                 break;
             }
         }

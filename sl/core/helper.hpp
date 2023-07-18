@@ -134,7 +134,7 @@ namespace sl
             static void deserialize(Archive &in, U &obj)
             {
                 explicit_is_simple<Archive, working_type>::deserialize(in, obj);
-            }             
+            }
 
         };
 

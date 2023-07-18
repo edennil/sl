@@ -154,13 +154,11 @@ namespace sl
                         if(in.compare("{\"@ptr\":", 8))
                         {
                             in += 8;
-                            auto p = in.find_first_of(',');
-                            auto id_size = p - in.position();
-                            id = atoi(in.substr(id_size).c_str());
-                            in += id_size + 10;
+                            helper<int>::deserialize(in, id);
                         }
                         if(id == -1)
                         {
+                            in += 10;
                             ptr_wrapper<PTR>::create(obj);
                             helper<type>::deserialize(in, *obj);
                         }
@@ -169,12 +167,13 @@ namespace sl
                             in.get_obj(id, obj);
                             if(!obj)
                             {
+                                in += 10;
                                 ptr_wrapper<PTR>::create(obj);
                                 helper<type>::deserialize(in, *obj);
                                 in.add(id, obj);
                             }
-                            in++;
                         }
+                        in++;
                     }
 
                     template<typename SIZE, typename PTR>
@@ -186,49 +185,58 @@ namespace sl
                         {
                             id = out.add(obj);
                             out.get() << "{\"@ptr\":";
-                            out.get() << std::to_string(id) + ",\"array\":[";
-                            for(SIZE i = 0; i < size - 1; i++)
+                            out.get() << std::to_string(id) + ",\"size\":" + std::to_string(size) + ",\"array\":[";
+                            if (size > 0)
                             {
-                                helper<type>::serialize(out, obj[i]);
-                                out.get() << ',';
+                                for (SIZE i = 0; i < size - 1; i++)
+                                {
+                                    helper<type>::serialize(out, obj[i]);
+                                    out.get() << ',';
+                                }
+                                helper<type>::serialize(out, obj[size - 1]);
                             }
-                            helper<type>::serialize(out, obj[size - 1]);
                             out.get() << ']';
                             out.get() << '}';
                         }
                         else
                         {
-                            out.get() << "{\"@ptr\":" << std::to_string(id) << '}';
+                            out.get() << "{\"@ptr\":" << std::to_string(id) << ",\"size\":" << std::to_string(size) << '}';
                         }
                     }
 
                     template<typename SIZE, typename PTR, typename ALLOCATOR>
-                    static void deserialize_array(json_iarchive &in, SIZE size, PTR &obj)
+                    static void deserialize_array(json_iarchive &in, SIZE &size, PTR &obj)
                     {                   
                         using type = std::decay_t<typename ptr_wrapper<PTR>::type>;
 
-                        auto deserialize = [](json_iarchive &in, SIZE size, PTR &obj)
+                        auto deserialize = [](json_iarchive &in, SIZE &size, PTR &obj)
                         {
-                            in++;
-                            for(SIZE i = 0; i < size; i++)
+                            helper<int>::deserialize(in, size);
+                            in += 10;
+                            if (size > 0)
                             {
-                                helper<type>::deserialize(in, obj[i]);
-                                in++;
+                                ptr_array<ALLOCATOR>::create(size, obj);
+                                for (SIZE i = 0; i < size; i++)
+                                {
+                                    sl::detail::helper<type>::deserialize(in, obj[i]);
+                                    if (i != size - 1)
+                                    {
+                                        in++;
+                                    }
+                                }
                             }
+                            in++;
                         };
 
                         int id = -1;
                         if(in.compare("{\"@ptr\":", 8))
                         {
                             in += 8;
-                            auto p = in.find_first_of(',');
-                            auto id_size = p - in.position();
-                            id = atoi(in.substr(id_size).c_str());
-                            in += id_size + 9;
+                            helper<int>::deserialize(in, id);
                         }
                         if(id == -1)
                         {
-                            ptr_array<ALLOCATOR>::create(size, obj);
+                            in += 8;
                             deserialize(in, size, obj);
                         }
                         else
@@ -236,12 +244,18 @@ namespace sl
                             in.get_obj(id, obj);
                             if(!obj)
                             {
-                                ptr_array<ALLOCATOR>::create(size, obj);
+                                in += 8;
                                 deserialize(in, size, obj);
-                                in.add(id, obj);                        
+                                in.add(id, obj);
                             }
-                            in++;
+                            else
+                            {
+                                in += 8;
+                                helper<int>::deserialize(in, size);
+                            }
+
                         }
+                        in++;
                     }
 
                 };
@@ -280,7 +294,7 @@ namespace sl
                 template<typename V>
                 static void deserialize(json_iarchive &in, const P &p, V &v)
                 {
-                    pointer::explicit_helper_json::deserialize_array(in, v.*(p.member1_), v.*(p.member2_));
+                    pointer::explicit_helper_json::deserialize_array<T, U, A>(in, v.*(p.member1_), v.*(p.member2_));
                 }
             };
             
@@ -332,7 +346,7 @@ namespace sl
             static void serialize(json_oarchive &out, const T &obj)
             {
                 constexpr auto properties = access::template get_properties<T>();
-                const auto size = std::tuple_size_v<decltype(properties)>;
+                constexpr auto size = std::tuple_size_v<decltype(properties)>;
                 detail::for_each(std::make_index_sequence<size>{}, [&](auto i)
                 {
                     auto property = std::get<i>(properties);

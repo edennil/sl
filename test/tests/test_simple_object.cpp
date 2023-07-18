@@ -67,7 +67,7 @@ public:
     object_with_std_elements() = default;
     ~object_with_std_elements() = default;
 
-    bool operator==(const object_with_std_elements &ref)
+    bool operator==(const object_with_std_elements &ref) const
     {
         SL_TEST(std_string_ == ref.std_string_);
         SL_TEST(std_vector_ == ref.std_vector_);

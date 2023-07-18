@@ -7,6 +7,7 @@ enable_testing()
 set(CMAKE_CXX_STANDARD 20)
 
 set(SOURCES src/main.cpp
+            tests/test_ptr.cpp
             tests/test_tools.cpp
             tests/test_environment_test.cpp
             tests/test_simple_object.cpp
@@ -36,3 +37,7 @@ add_test(NAME "test_user_functions.test_deserialize_function" COMMAND sl_test --
 add_test(NAME "test_user_functions.test_serialize_and_deserialize_function" COMMAND sl_test --run=test_user_functions/test_serialize_and_deserialize_function)
 add_test(NAME "test_user_functions.test_with_version_function" COMMAND sl_test --run=test_user_functions/test_with_version_function)
 add_test(NAME "test_user_functions.test_deserialize_with_version_function" COMMAND sl_test --run=test_user_functions/test_deserialize_with_version_function)
+add_test(NAME "test_ptr.simple_double_ptr" COMMAND sl_test --run=test_ptr/simple_double_ptr)
+add_test(NAME "test_ptr.simple_double_ptr_multiple_ptr" COMMAND sl_test --run=test_ptr/simple_double_ptr_multiple_ptr)
+add_test(NAME "test_ptr.simple_double_ptr_array" COMMAND sl_test --run=test_ptr/simple_double_ptr_array)
+add_test(NAME "test_ptr.simple_double_ptr_multiple_ptr_array" COMMAND sl_test --run=test_ptr/simple_double_ptr_multiple_ptr_array)

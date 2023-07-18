@@ -295,14 +295,12 @@ namespace sl
                 out.get() << '{';
                 if (detail::class_data<T>::version != 0)
                 {
-                    std::string tmp("\"version\":");
+                    std::string tmp("\"@version\":");
                     out.get() << tmp;
                     out.get() << detail::class_data<T>::version;
                     out.get() << ',';
                 }
-                out.get() << '\"' + std::string(detail::class_data<T>::name) + "\":{";
                 access::serialize(out, obj, detail::class_data<T>::version);
-                out.get() << '}';
                 out.get() << '}';
             }
 
@@ -317,23 +315,13 @@ namespace sl
             {
                 in++;
                 int version(0);
-                if(in.compare("\"version", 8))
+                if(in.compare("\"@version", 9))
                 {
-                    in +=10;
+                    in += 11;
                     helper<int>::deserialize(in, version);
                     in++;
                 }
-                auto len = detail::class_data<T>::size;
-                in++;
-                if(!in.compare(detail::class_data<T>::name, len))
-                {
-                    throw std::exception();
-                }
-                in += len + 1;
-                in++;
-                in++;
                 access::deserialize(in, obj, version);
-                in++;
                 in++;
             }
         };
@@ -348,9 +336,7 @@ namespace sl
                 detail::for_each(std::make_index_sequence<size>{}, [&](auto i)
                 {
                     auto property = std::get<i>(properties);
-                    auto tmp = '\"' + std::string(property.name_) + '\"';
-                    tmp += ':';
-                    out.get() << tmp;
+                    out.get() << '\"' + std::string(property.name_) + "\":";
                     json::explicit_helper_property<decltype(property)>::serialize(out, property, obj);
                     if(i != size - 1)
                     {
@@ -368,12 +354,10 @@ namespace sl
             static void serialize(json_oarchive &out, const T &obj)
             {
                 out.get() << '{';
-                out.get() << "\"version\":";
+                out.get() << "\"@version\":";
                 out.get() << version;
                 out.get() << ',';
-                out.get() << '\"' + std::string(detail::class_data<T>::name) + "\":{";
                 explicit_without_name::serialize(out, obj);
-                out.get() << '}';
                 out.get() << '}';
             }
 
@@ -383,9 +367,9 @@ namespace sl
                 using type = std::decay_t<T>;
                 in++;
                 int local_version(0);
-                if (in.compare("\"version", 8))
+                if (in.compare("\"@version", 9))
                 {
-                    in += 10;
+                    in += 11;
                     helper<int>::deserialize(in, local_version);
                     in++;
                 }
@@ -393,15 +377,6 @@ namespace sl
                 {
                     throw std::exception();
                 }
-                auto len = detail::class_data<T>::size;
-                in++;
-                if (!in.compare(detail::class_data<T>::name, len))
-                {
-                    throw std::exception();
-                }
-                in += len + 1;
-                in++;
-                in++;
                 constexpr auto properties = access::template get_properties<type>();
                 const auto size = std::tuple_size_v<decltype(properties)>;
                 detail::for_each(std::make_index_sequence<size>{}, [&](auto i)
@@ -430,7 +405,6 @@ namespace sl
                     }
                     });
                 in++;
-                in++;
             }
         };
 
@@ -441,9 +415,7 @@ namespace sl
             static void serialize(json_oarchive &out, const T &obj)
             {
                 out.get() << '{';
-                out.get() << '\"' + std::string(detail::class_data<T>::name) + "\":{";
                 explicit_without_name::serialize(out, obj);
-                out.get() << '}';
                 out.get() << '}';
             }
         };
@@ -457,15 +429,7 @@ namespace sl
             {
                 using type = std::decay_t<T>;
                 in++;
-                in++;
                 constexpr auto properties = access::template get_properties<type>();
-                constexpr auto len = detail::class_data<type>::size;
-                if (!in.compare(detail::class_data<type>::name, len))
-                {
-                    throw std::exception();
-                }
-                in += len + 2;
-                in++;
                 const auto size = std::tuple_size_v<decltype(properties)>;
                 detail::for_each(std::make_index_sequence<size>{}, [&](auto i)
                     {
@@ -492,7 +456,6 @@ namespace sl
                             in++;
                         }
                     });
-                in++;
                 in++;
             }
         };
@@ -625,14 +588,12 @@ namespace sl
             {
                 if(detail::class_data<T>::version != 0)
                 {
-                    std::string tmp("\"version\":");
+                    std::string tmp("\"@version\":");
                     out.get() << tmp;
                     out.get() << detail::class_data<T>::version;
                     out.get() << ',';
                 }
-                out.get() << '\"' + std::string(detail::class_data<T>::name) + "\":{";
                 access::serialize(out, obj, detail::class_data<T>::version);
-                out.get() << '}';
             }
         };
 
@@ -657,23 +618,13 @@ namespace sl
             static void deserialize(json_iarchive &in, T &obj)
             {
                 int version(0);
-                if(in.compare("\"version", 8))
+                if(in.compare("\"@version", 9))
                 {
-                    in += 10;
+                    in += 11;
                     helper<int>::deserialize(in, version);
                     in++;
                 }
-                auto len = detail::class_data<T>::size;
-                in++;
-                if(!in.compare(detail::class_data<T>::name, len))
-                {
-                    throw std::exception();
-                }
-                in += len + 1;
-                in++;
-                in++;
                 access::deserialize(in, obj, version);
-                in++;
             }
         };
 
@@ -1024,7 +975,7 @@ namespace sl
         //            i = i > j ? j : i;
         //            i = i > k ? k : i;
         //            auto size = i - in.position();
-        //            in += static_cast<int>(size);                          
+        //            in += static_cast<int>(size);
         //        }
         //        if(is_last)
         //        {

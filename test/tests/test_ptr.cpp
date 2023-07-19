@@ -26,7 +26,8 @@ namespace test_simple_double_ptr
 
         bool operator==(const observer& ref) const
         {
-            return *ptr_ == *ref.ptr_;
+            SL_TEST(*ptr_ == *ref.ptr_);
+            return true;
         }
 
     protected:
@@ -39,11 +40,19 @@ namespace test_simple_double_ptr
 
     };
 
+    template<typename T>
     class object
     {
     public:
 
-        ~object() { delete ptr_; }
+        ~object() 
+        {
+            if constexpr (std::is_pointer_v<T>)
+            {
+                delete ptr_;
+            }
+        }
+
         object() = default;
 
         object(object&& src)
@@ -51,18 +60,19 @@ namespace test_simple_double_ptr
             std::swap(ptr_, src.ptr_);
         }
 
-        double*& ptr() { return ptr_; }
+        T & ptr() { return ptr_; }
 
         bool operator==(const object& ref) const
         {
-            return *ptr_ == *ref.ptr_;
+            SL_TEST(*ptr_ == *ref.ptr_);
+            return true;
         }
 
     protected:
 
         SL_SERIALIZABLE;
 
-        double* ptr_ = nullptr;
+        T ptr_ = nullptr;
 
         SL_PROPERTIES(SL_PROPERTY(object::ptr_, "pointer"));
 
@@ -84,15 +94,12 @@ namespace test_simple_double_ptr_array
 
         bool operator==(const observer& ref) const
         {
-            bool res = size_ == ref.size_;
-            if (res)
+            SL_TEST(size_ == ref.size_);
+            for (std::size_t i = 0; i < size_; i++)
             {
-                for (std::size_t i = 0; i < size_; i++)
-                {
-                    res &= ptr_[i] == ref.ptr_[i];
-                }
+                SL_TEST(ptr_[i] == ref.ptr_[i]);
             }
-            return res;
+            return true;
         }
 
     protected:
@@ -124,15 +131,12 @@ namespace test_simple_double_ptr_array
 
         bool operator==(const object& ref) const
         {
-            bool res = size_ == ref.size_;
-            if (res)
+            SL_TEST(size_ == ref.size_);
+            for (std::size_t i = 0; i < size_; i++)
             {
-                for (std::size_t i = 0; i < size_; i++)
-                {
-                    res &= ptr_[i] == ref.ptr_[i];
-                }
+                SL_TEST(ptr_[i] == ref.ptr_[i]);
             }
-            return res;
+            return true;
         }
 
     protected:
@@ -154,17 +158,29 @@ SL_TEST_GROUP(test_ptr)
 SL_ADD_TEST_CASE(simple_double_ptr)
 {
 
-    test_simple_double_ptr::object obj;
-    obj.ptr() = new double{ 3. };
+    {
+        test_simple_double_ptr::object<double*> obj;
+        obj.ptr() = new double{ 3. };
+        sl::test::serialize_common<test_simple_double_ptr::object<double *>, sl::json_iarchive, sl::json_oarchive>::apply(obj);
+    }
 
-    sl::test::serialize_common<test_simple_double_ptr::object, sl::json_iarchive, sl::json_oarchive>::apply(obj);
+    {
+        test_simple_double_ptr::object<std::unique_ptr<double>> obj;
+        obj.ptr() = std::make_unique<double>(3.);
+        sl::test::serialize_common<test_simple_double_ptr::object<std::unique_ptr<double>>, sl::json_iarchive, sl::json_oarchive>::apply(obj);
+    }
 
+    {
+        test_simple_double_ptr::object<std::shared_ptr<double>> obj;
+        obj.ptr() = std::make_shared<double>(3.);
+        sl::test::serialize_common<test_simple_double_ptr::object<std::shared_ptr<double>>, sl::json_iarchive, sl::json_oarchive>::apply(obj);
+    }
 }
 
 SL_ADD_TEST_CASE(simple_double_ptr_multiple_ptr)
 {
 
-    test_simple_double_ptr::object obj;
+    test_simple_double_ptr::object<double *> obj;
     obj.ptr() = new double{ 3. };
 
     std::vector<test_simple_double_ptr::observer> observers{ 10 };

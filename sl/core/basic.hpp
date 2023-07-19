@@ -79,6 +79,22 @@ namespace sl
             }
         };
 
+        template<typename T, typename D>
+        struct ptr_wrapper<std::unique_ptr<T, D>>
+        {
+            using type = T;
+            static type* get(const std::unique_ptr<T, D>& obj)
+            {
+                return obj.get();
+            }
+
+            template<typename U>
+            static void create(U& obj)
+            {
+                obj = std::unique_ptr<type, D>(new type);
+            }
+        };
+
         template<typename A>
         struct ptr_array
         {

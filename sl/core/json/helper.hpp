@@ -1033,36 +1033,36 @@ namespace sl
             }
         };
 
-        template<typename A>
-        struct explicit_helper<json_oarchive, std::unique_ptr<A>>
+        template<typename A, typename D>
+        struct explicit_helper<json_oarchive, std::unique_ptr<A, D>>
         {
 
-            template<typename F, std::enable_if_t<std::is_polymorphic_v<std::decay_t<F>>, int> = 0>
-            static void serialize(json_oarchive& out, const std::unique_ptr<F>& obj)
+            template<typename F, typename G, std::enable_if_t<std::is_polymorphic_v<std::decay_t<F>>, int> = 0>
+            static void serialize(json_oarchive& out, const std::unique_ptr<F, G>& obj)
             {
                 json::pointer::explicit_helper_json::serialize_poly(out, obj);
             }
 
-            template<typename F, std::enable_if_t<!std::is_polymorphic_v<std::decay_t<F>>, int> = 0>
-            static void serialize(json_oarchive& out, const std::unique_ptr<F>& obj)
+            template<typename F, typename G, std::enable_if_t<!std::is_polymorphic_v<std::decay_t<F>>, int> = 0>
+            static void serialize(json_oarchive& out, const std::unique_ptr<F, G>& obj)
             {
                 json::pointer::explicit_helper_json::serialize_simple(out, obj);
             }
         };
 
 
-        template<typename A>
-        struct explicit_helper<json_iarchive, std::unique_ptr<A>>
+        template<typename A, typename D>
+        struct explicit_helper<json_iarchive, std::unique_ptr<A, D>>
         {
 
-            template<typename F, std::enable_if_t<std::is_polymorphic_v<std::decay_t<F>>, int> = 0>
-            static void deserialize(json_iarchive& out, std::shared_ptr<F>& obj)
+            template<typename F, typename G, std::enable_if_t<std::is_polymorphic_v<std::decay_t<F>>, int> = 0>
+            static void deserialize(json_iarchive& out, std::unique_ptr<F, G>& obj)
             {
                 json::pointer::explicit_helper_json::deserialize_poly(out, obj);
             }
 
-            template<typename F, std::enable_if_t<!std::is_polymorphic_v<std::decay_t<F>>, int> = 0>
-            static void deserialize(json_iarchive& out, std::shared_ptr<F>& obj)
+            template<typename F, typename G, std::enable_if_t<!std::is_polymorphic_v<std::decay_t<F>>, int> = 0>
+            static void deserialize(json_iarchive& out, std::unique_ptr<F, G>& obj)
             {
                 json::pointer::explicit_helper_json::deserialize_simple(out, obj);
             }

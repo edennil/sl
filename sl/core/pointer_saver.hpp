@@ -59,8 +59,8 @@ namespace sl
                 return it->second;   
             }
 
-            template<typename T>
-            size_t add(const std::unique_ptr<T> &ptr)
+            template<typename T, typename D>
+            size_t add(const std::unique_ptr<T, D> &ptr)
             {
                 auto memory = static_cast<void *>(ptr.get());
                 auto it = pointers_.find(memory);
@@ -96,8 +96,8 @@ namespace sl
                 return -1;
             }
 
-            template<typename T>
-            size_t id(std::unique_ptr<T> &ptr)
+            template<typename T, typename D>
+            size_t id(const std::unique_ptr<T, D> &ptr)
             {
                 auto it = pointers_.find(static_cast<void *>(ptr.get()));
                 if(it != pointers_.end())
@@ -250,13 +250,13 @@ namespace sl
                     }
                     else
                     {
-                        obj = static_cast<T *>(positions_[i].first);
+                        obj = std::static_pointer_cast<T>(positions_[i].second);
                     }
                 }
             }
 
-            template<typename T>
-            void get_obj(size_t i, std::unique_ptr<T> &obj)
+            template<typename T, typename D>
+            void get_obj(size_t i, std::unique_ptr<T, D> &obj)
             {
                 if(i < positions_.size())
                 {
@@ -267,7 +267,7 @@ namespace sl
                         {
                             throw std::runtime_error("We can't create a unique_ptr using a shared_ptr");
                         }
-                        obj = std::make_unique<T>(static_cast<T *>(positions_[i].first));
+                        obj = std::unique_ptr<T, D>(static_cast<T *>(positions_[i].first));
                         unique_ptr_.emplace(i);
                     }
                     else

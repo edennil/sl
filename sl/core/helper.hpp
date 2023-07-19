@@ -456,18 +456,18 @@ namespace sl
             }
         };
 
-        template<typename A>
-        struct helper<std::unique_ptr<A>>
+        template<typename A, typename D>
+        struct helper<std::unique_ptr<A, D>>
         {
 
             template<typename Archive>
-            static void serialize(Archive &out, const std::unique_ptr<A> &obj)
+            static void serialize(Archive &out, const std::unique_ptr<A, D> &obj)
             {
-                explicit_helper<Archive, std::unique_ptr<A>>::serialize(out, obj);
+                explicit_helper<Archive, std::unique_ptr<A, D>>::serialize(out, obj);
             }
 
             template<typename Archive>
-            static void deserialize(Archive &in, std::unique_ptr<A> &obj)
+            static void deserialize(Archive &in, std::unique_ptr<A, D> &obj)
             {
                 explicit_helper<Archive, std::unique_ptr<A>>::deserialize(in, obj);
             }

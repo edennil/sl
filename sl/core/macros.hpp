@@ -54,12 +54,12 @@
 #define COMBINE1(X, Y) X ## Y
 #define COMBINE(X, Y) COMBINE1(X, Y)
 
-#define SL_SERIALIZE_LINK_DERIVED(A, B) namespace {namespace COMBINE(PRIVATE, __LINE__){\
+#define SL_SERIALIZE_LINK_DERIVED(BASE, DERIVED) namespace {namespace COMBINE(PRIVATE, __LINE__){\
                                             struct link_register{link_register(){\
                                                 using namespace sl;\
-                                                detail::link_derived<A, B>();\
-                                                detail::link_derived<A>();\
-                                                detail::link_derived<B>();}};\
+                                                detail::link_derived<BASE, DERIVED>();\
+                                                detail::link_derived<BASE>();\
+                                                detail::link_derived<DERIVED>();}};\
                                                 link_register tmp;}}
 
 #define SL_CAST_BASE(A, B) sl::cast_base<A>(B)

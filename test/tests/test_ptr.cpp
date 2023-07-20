@@ -55,7 +55,7 @@ namespace test_simple_double_ptr
 
         object() = default;
 
-        object(object&& src)
+        object(object&& src) noexcept
         {
             std::swap(ptr_, src.ptr_);
         }
@@ -120,7 +120,7 @@ namespace test_simple_double_ptr_array
         ~object() { delete [] ptr_; }
         object() = default;
 
-        object(object&& src)
+        object(object&& src) noexcept
         {
             std::swap(size_, src.size_);
             std::swap(ptr_, src.ptr_);

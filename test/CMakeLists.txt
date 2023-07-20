@@ -7,6 +7,7 @@ enable_testing()
 set(CMAKE_CXX_STANDARD 20)
 
 set(SOURCES src/main.cpp
+            tests/test_poly.cpp
             tests/test_ptr.cpp
             tests/test_tools.cpp
             tests/test_environment_test.cpp

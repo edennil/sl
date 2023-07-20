@@ -197,14 +197,14 @@ namespace sl
             virtual ~builder() = default;
             builder()
             {
-                name_ = class_data<A>::name;
+                //name_ = class_data<A>::name;
             }
 
             template<typename C>
             void add(const C* c)
             {
-                std::string name(class_data<C>::name);
-                if constexpr (std::is_same_v<A, C>)
+                //std::string name(class_data<C>::name);
+                /*if constexpr (std::is_same_v<A, C>)
                 {
                     if (base_ == nullptr)
                     {
@@ -219,60 +219,63 @@ namespace sl
                         position_.emplace(std::move(name), builders_.size());
                         builders_.emplace_back(new impl::derived_class<A, C>());
                     }
-                }
+                }*/
             }
 
             const std::string &name(const A* c) const
             {
-                for (const auto& v : builders_)
+                /*for (const auto& v : builders_)
                 {
                     if (v->test(c))
                     {
                         return v->name(c);
                     }
                 }
-                return name_;
+                return name_;*/
+                return std::string();
             }
 
             bool test(const std::string& name)
             {
-                bool res = name_ == name;
+                /*bool res = name_ == name;
                 for (const auto& v : builders_)
                 {
                     res |= v->test(name);
                 }
-                return res;
+                return res;*/
+                return false;
             }
 
             unsigned int version(const A* c) const
             {
-                for (const auto& v : builders_)
+                /*for (const auto& v : builders_)
                 {
                     if (v->test(c))
                     {
                         return v->version(c);
                     }
                 }
-                return class_data<A>::version;
+                return class_data<A>::version;*/
+                return 0;
             }
 
             template<typename OUT>
             void save(const A* a, OUT& out) const
             {
-                for (const auto& v : builders_)
+                /*for (const auto& v : builders_)
                 {
                     if (v->test(a))
                     {
                         return v->save(a, out);
                     }
                 }
-                access::serialize(out, *a, class_data<A>::version);
+                access::serialize(out, *a, class_data<A>::version);*/
             }
 
             template<typename IN, typename T>
             void build(const std::string& name, int version, IN& in, T *&ptr)
             {
-                if (name == name_)
+                /*if (name == name_)
                 {
                     ptr_wrapper<T *>::create(ptr);
                     return access::deserialize(in, *ptr, version);
@@ -284,7 +287,7 @@ namespace sl
                         return;
                     }
                 }
-                throw std::bad_typeid();
+                throw std::bad_typeid();*/
             }
 
             impl::base_class<A>* base_ = nullptr;
